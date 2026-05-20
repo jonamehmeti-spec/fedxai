@@ -100,8 +100,8 @@ FLAG_COLORS = {"high": "#E8593C", "moderate": "#BA7517"}
 st.set_page_config(
     page_title="FedXAI",
     page_icon=None,
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="centered",
+    initial_sidebar_state="auto"
 )
 
 st.markdown("""
@@ -388,6 +388,76 @@ html, body, [class*="css"] {
     font-size: 13px;
     color: #475569;
     margin-bottom: 20px;
+}
+
+/* ── Mobile ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    /* Tighten page padding */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        padding-bottom: 1rem !important;
+        max-width: 100% !important;
+    }
+
+    /* Collapse Streamlit columns to full width */
+    [data-testid="column"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+
+    /* Page titles */
+    .page-title { font-size: 22px !important; }
+    .page-subtitle { font-size: 13px !important; }
+    .page-title-eyebrow { font-size: 9px !important; }
+    .page-header { margin-bottom: 20px !important; padding-bottom: 14px !important; }
+
+    /* Stage headers */
+    .mimic-card { margin-bottom: 12px !important; }
+
+    /* Prediction card */
+    .prediction-card { padding: 20px 16px !important; }
+    .prediction-label { font-size: 18px !important; }
+    .prediction-confidence { font-size: 13px !important; }
+
+    /* Metric cards */
+    .metric-card { padding: 14px 16px !important; }
+    .metric-value { font-size: 22px !important; }
+
+    /* Buttons full width on mobile */
+    .stButton > button {
+        width: 100% !important;
+        padding: 12px !important;
+        font-size: 15px !important;
+    }
+
+    /* Input labels and spacing */
+    .input-group-label { margin: 14px 0 8px 0 !important; }
+
+    /* Report box */
+    .report-box { padding: 12px 14px !important; font-size: 13px !important; }
+
+    /* Sidebar collapses by default on mobile — no changes needed,
+       but reduce logo size so it fits the collapsed header bar */
+    .sidebar-logo { font-size: 18px !important; }
+
+    /* Reduce top-test teal card font */
+    .stMarkdown div[style*="background:#0D9488"] {
+        padding: 12px !important;
+    }
+
+    /* Radio buttons wrap better */
+    .stRadio [role="radiogroup"] {
+        flex-direction: column !important;
+    }
+
+    /* Dataframes scroll horizontally */
+    .stDataFrame { overflow-x: auto !important; }
+
+    /* Plotly charts full width */
+    .js-plotly-plot { width: 100% !important; }
 }
 </style>
 """, unsafe_allow_html=True)

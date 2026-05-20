@@ -236,6 +236,15 @@ def render_deep_diagnosis(
     # Inject hover CSS once
     st.markdown("""
     <style>
+    @media (max-width: 768px) {
+        [data-testid="column"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 100% !important;
+        }
+        .mimic-card { margin-bottom: 10px !important; }
+        .mimic-red-flags li { font-size: 12px !important; }
+    }
     .mimic-card {
         border-radius: 10px;
         padding: 14px 14px 0 14px;
