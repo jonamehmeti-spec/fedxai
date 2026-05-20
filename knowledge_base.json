@@ -1,0 +1,1386 @@
+{
+    "metadata": {
+      "version": "1.0",
+      "description": "Clinical knowledge base for rare/underdiagnosed disease detection",
+      "sources": [
+        "Endocrine Society Clinical Practice Guidelines",
+        "ACR Rheumatology Guidelines",
+        "UpToDate Clinical Decision Support",
+        "NEJM Review Articles"
+      ],
+      "disease_categories": {
+        "endocrine": ["cushings_syndrome", "addisons_disease", "primary_hyperaldosteronism", "hypothyroidism", "pheochromocytoma"],
+        "autoimmune": ["systemic_lupus", "early_rheumatoid_arthritis", "sjogrens_syndrome", "antiphospholipid_syndrome", "graves_disease", "polymyalgia_rheumatica", "celiac_disease"],
+        "sleep": ["obstructive_sleep_apnea"],
+        "cardiovascular": ["atrial_fibrillation", "renal_artery_stenosis"],
+        "metabolic": ["hemochromatosis", "nafld_nash", "vitamin_d_deficiency"],
+        "hematological": ["polycythemia_vera"]
+      }
+    },
+  
+    "common_diseases": {
+      "essential_hypertension": {
+        "display_name": "Essential Hypertension",
+        "prevalence": 0.45
+      },
+      "type2_diabetes": {
+        "display_name": "Type 2 Diabetes",
+        "prevalence": 0.11
+      },
+      "high_cvd_risk": {
+        "display_name": "High Cardiovascular Risk",
+        "prevalence": 0.08
+      },
+      "obesity_metabolic": {
+        "display_name": "Obesity / Metabolic Syndrome",
+        "prevalence": 0.35
+      }
+    },
+  
+    "rare_diseases": {
+      "cushings_syndrome": {
+        "display_name": "Cushing's Syndrome",
+        "category": "endocrine",
+        "prevalence_general": 0.0002,
+        "prevalence_in_hypertension": 0.01,
+        "prevalence_in_diabetes": 0.02,
+        "avg_diagnostic_delay_months": 38,
+        "mimics": ["essential_hypertension", "type2_diabetes", "obesity_metabolic"],
+        "description": "Excess cortisol production causing a constellation of metabolic symptoms often mistaken for common conditions.",
+  
+        "trigger_indicators": {
+          "required_common_flags": ["essential_hypertension", "type2_diabetes"],
+          "symptom_overlap_score_threshold": 0.4
+        },
+  
+        "clinical_features": {
+          "hypertension": {"weight": 0.7, "present_in_pct": 0.80},
+          "weight_gain_central": {"weight": 0.8, "present_in_pct": 0.90},
+          "hyperglycemia": {"weight": 0.7, "present_in_pct": 0.75},
+          "fatigue": {"weight": 0.4, "present_in_pct": 0.85},
+          "depression_mood": {"weight": 0.5, "present_in_pct": 0.60},
+          "muscle_weakness": {"weight": 0.7, "present_in_pct": 0.65},
+          "easy_bruising": {"weight": 0.9, "present_in_pct": 0.45},
+          "striae": {"weight": 0.95, "present_in_pct": 0.40},
+          "moon_face": {"weight": 0.85, "present_in_pct": 0.70},
+          "buffalo_hump": {"weight": 0.85, "present_in_pct": 0.55}
+        },
+  
+        "distinguishing_tests": {
+          "24h_urinary_cortisol": {
+            "display_name": "24-hour Urinary Free Cortisol",
+            "sensitivity": 0.95,
+            "specificity": 0.98,
+            "cost_relative": 1.5,
+            "invasiveness": "low",
+            "result_time_days": 2,
+            "rules_out": ["essential_hypertension", "obesity_metabolic"],
+            "normal_range": "< 50 mcg/24h",
+            "abnormal_direction": "elevated"
+          },
+          "late_night_salivary_cortisol": {
+            "display_name": "Late-Night Salivary Cortisol",
+            "sensitivity": 0.93,
+            "specificity": 0.96,
+            "cost_relative": 1.0,
+            "invasiveness": "very_low",
+            "result_time_days": 1,
+            "rules_out": ["essential_hypertension"],
+            "normal_range": "< 0.13 mcg/dL",
+            "abnormal_direction": "elevated"
+          },
+          "low_dose_dexamethasone_suppression": {
+            "display_name": "Low-Dose Dexamethasone Suppression Test",
+            "sensitivity": 0.98,
+            "specificity": 0.88,
+            "cost_relative": 1.2,
+            "invasiveness": "low",
+            "result_time_days": 2,
+            "rules_out": ["essential_hypertension", "type2_diabetes", "obesity_metabolic"],
+            "normal_range": "Cortisol < 1.8 mcg/dL post-dex",
+            "abnormal_direction": "non_suppressed"
+          },
+          "acth_plasma": {
+            "display_name": "Plasma ACTH Level",
+            "sensitivity": 0.80,
+            "specificity": 0.85,
+            "cost_relative": 1.3,
+            "invasiveness": "low",
+            "result_time_days": 2,
+            "rules_out": [],
+            "normal_range": "10-60 pg/mL",
+            "abnormal_direction": "variable"
+          }
+        },
+  
+        "red_flags": [
+          "Hypertension resistant to 3+ medications",
+          "Diabetes with unexplained weight gain",
+          "Central obesity with muscle weakness",
+          "Purple striae wider than 1cm",
+          "Easy bruising without trauma"
+        ]
+      },
+  
+      "addisons_disease": {
+        "display_name": "Addison's Disease",
+        "category": "endocrine",
+        "prevalence_general": 0.0001,
+        "prevalence_in_hypertension": 0.001,
+        "prevalence_in_diabetes": 0.005,
+        "avg_diagnostic_delay_months": 24,
+        "mimics": ["essential_hypertension", "type2_diabetes", "obesity_metabolic"],
+        "description": "Primary adrenal insufficiency causing chronic fatigue, hypotension, and electrolyte disturbances, frequently misdiagnosed as depression or chronic fatigue syndrome.",
+  
+        "trigger_indicators": {
+          "required_common_flags": [],
+          "symptom_overlap_score_threshold": 0.3
+        },
+  
+        "clinical_features": {
+          "fatigue_chronic": {"weight": 0.6, "present_in_pct": 0.99},
+          "weight_loss": {"weight": 0.7, "present_in_pct": 0.85},
+          "hypotension": {"weight": 0.8, "present_in_pct": 0.90},
+          "nausea_vomiting": {"weight": 0.5, "present_in_pct": 0.75},
+          "salt_craving": {"weight": 0.9, "present_in_pct": 0.65},
+          "hyperpigmentation": {"weight": 0.95, "present_in_pct": 0.92},
+          "muscle_weakness": {"weight": 0.6, "present_in_pct": 0.80},
+          "depression": {"weight": 0.4, "present_in_pct": 0.60},
+          "low_sodium": {"weight": 0.8, "present_in_pct": 0.85},
+          "high_potassium": {"weight": 0.8, "present_in_pct": 0.65}
+        },
+  
+        "distinguishing_tests": {
+          "morning_cortisol": {
+            "display_name": "Morning Serum Cortisol (8AM)",
+            "sensitivity": 0.85,
+            "specificity": 0.90,
+            "cost_relative": 0.8,
+            "invasiveness": "low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "10-20 mcg/dL",
+            "abnormal_direction": "low"
+          },
+          "acth_stimulation_test": {
+            "display_name": "ACTH Stimulation Test (Cosyntropin)",
+            "sensitivity": 0.97,
+            "specificity": 0.95,
+            "cost_relative": 2.0,
+            "invasiveness": "moderate",
+            "result_time_days": 1,
+            "rules_out": ["essential_hypertension", "type2_diabetes"],
+            "normal_range": "Cortisol > 18 mcg/dL at 60min",
+            "abnormal_direction": "inadequate_response"
+          },
+          "plasma_acth": {
+            "display_name": "Plasma ACTH (elevated in primary)",
+            "sensitivity": 0.90,
+            "specificity": 0.88,
+            "cost_relative": 1.3,
+            "invasiveness": "low",
+            "result_time_days": 2,
+            "rules_out": [],
+            "normal_range": "10-60 pg/mL",
+            "abnormal_direction": "elevated"
+          },
+          "electrolytes_panel": {
+            "display_name": "Serum Electrolytes (Na, K)",
+            "sensitivity": 0.70,
+            "specificity": 0.75,
+            "cost_relative": 0.5,
+            "invasiveness": "low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "Na 136-145, K 3.5-5.0 mEq/L",
+            "abnormal_direction": "low_na_high_k"
+          }
+        },
+  
+        "red_flags": [
+          "Unexplained hypotension especially postural",
+          "Hyperpigmentation of skin creases and mucosa",
+          "Salt craving with fatigue",
+          "Hyponatremia + hyperkalemia combination",
+          "Fatigue unresponsive to treatment"
+        ]
+      },
+  
+      "primary_hyperaldosteronism": {
+        "display_name": "Primary Hyperaldosteronism (Conn's Syndrome)",
+        "category": "endocrine",
+        "prevalence_general": 0.001,
+        "prevalence_in_hypertension": 0.10,
+        "prevalence_in_resistant_hypertension": 0.20,
+        "avg_diagnostic_delay_months": 18,
+        "mimics": ["essential_hypertension"],
+        "description": "Excess aldosterone production causing secondary hypertension. Present in up to 10% of hypertensive patients but frequently dismissed as essential hypertension.",
+  
+        "trigger_indicators": {
+          "required_common_flags": ["essential_hypertension"],
+          "symptom_overlap_score_threshold": 0.3
+        },
+  
+        "clinical_features": {
+          "hypertension_resistant": {"weight": 0.9, "present_in_pct": 0.75},
+          "hypokalemia": {"weight": 0.85, "present_in_pct": 0.40},
+          "muscle_weakness": {"weight": 0.6, "present_in_pct": 0.35},
+          "fatigue": {"weight": 0.3, "present_in_pct": 0.50},
+          "headache": {"weight": 0.3, "present_in_pct": 0.40},
+          "polyuria": {"weight": 0.5, "present_in_pct": 0.30},
+          "palpitations": {"weight": 0.4, "present_in_pct": 0.25}
+        },
+  
+        "distinguishing_tests": {
+          "aldosterone_renin_ratio": {
+            "display_name": "Aldosterone-to-Renin Ratio (ARR)",
+            "sensitivity": 0.90,
+            "specificity": 0.84,
+            "cost_relative": 1.2,
+            "invasiveness": "low",
+            "result_time_days": 2,
+            "rules_out": ["essential_hypertension"],
+            "normal_range": "ARR < 30 (with aldosterone in ng/dL)",
+            "abnormal_direction": "elevated"
+          },
+          "serum_potassium": {
+            "display_name": "Serum Potassium",
+            "sensitivity": 0.37,
+            "specificity": 0.95,
+            "cost_relative": 0.4,
+            "invasiveness": "low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "3.5-5.0 mEq/L",
+            "abnormal_direction": "low"
+          },
+          "plasma_aldosterone": {
+            "display_name": "Plasma Aldosterone Concentration",
+            "sensitivity": 0.75,
+            "specificity": 0.80,
+            "cost_relative": 1.0,
+            "invasiveness": "low",
+            "result_time_days": 2,
+            "rules_out": [],
+            "normal_range": "< 15 ng/dL (upright)",
+            "abnormal_direction": "elevated"
+          },
+          "salt_loading_test": {
+            "display_name": "Oral Salt Loading Confirmatory Test",
+            "sensitivity": 0.92,
+            "specificity": 0.94,
+            "cost_relative": 1.5,
+            "invasiveness": "low",
+            "result_time_days": 4,
+            "rules_out": ["essential_hypertension"],
+            "normal_range": "24h urine aldosterone < 12 mcg",
+            "abnormal_direction": "elevated"
+          }
+        },
+  
+        "red_flags": [
+          "Hypertension requiring 3+ medications",
+          "Hypertension with spontaneous hypokalemia",
+          "Hypertension onset before age 40",
+          "Adrenal incidentaloma with hypertension",
+          "Family history of early hypertension or stroke"
+        ]
+      },
+  
+      "hypothyroidism": {
+        "display_name": "Hypothyroidism (Underactive Thyroid)",
+        "category": "endocrine",
+        "prevalence_general": 0.05,
+        "prevalence_in_hypertension": 0.08,
+        "prevalence_in_diabetes": 0.10,
+        "avg_diagnostic_delay_months": 12,
+        "mimics": ["essential_hypertension", "type2_diabetes", "obesity_metabolic"],
+        "description": "Insufficient thyroid hormone production causing metabolic slowdown. Extremely common but frequently overlooked as a secondary cause of hypertension, weight gain, and fatigue.",
+  
+        "trigger_indicators": {
+          "required_common_flags": [],
+          "symptom_overlap_score_threshold": 0.35
+        },
+  
+        "clinical_features": {
+          "fatigue": {"weight": 0.5, "present_in_pct": 0.99},
+          "weight_gain": {"weight": 0.6, "present_in_pct": 0.85},
+          "cold_intolerance": {"weight": 0.85, "present_in_pct": 0.75},
+          "constipation": {"weight": 0.6, "present_in_pct": 0.55},
+          "dry_skin": {"weight": 0.7, "present_in_pct": 0.70},
+          "hair_loss": {"weight": 0.7, "present_in_pct": 0.60},
+          "depression": {"weight": 0.4, "present_in_pct": 0.55},
+          "bradycardia": {"weight": 0.8, "present_in_pct": 0.50},
+          "hypertension_diastolic": {"weight": 0.5, "present_in_pct": 0.40},
+          "elevated_cholesterol": {"weight": 0.6, "present_in_pct": 0.65}
+        },
+  
+        "distinguishing_tests": {
+          "tsh": {
+            "display_name": "TSH (Thyroid Stimulating Hormone)",
+            "sensitivity": 0.98,
+            "specificity": 0.92,
+            "cost_relative": 0.7,
+            "invasiveness": "low",
+            "result_time_days": 1,
+            "rules_out": ["essential_hypertension", "obesity_metabolic"],
+            "normal_range": "0.4-4.0 mIU/L",
+            "abnormal_direction": "elevated"
+          },
+          "free_t4": {
+            "display_name": "Free T4 (Thyroxine)",
+            "sensitivity": 0.90,
+            "specificity": 0.95,
+            "cost_relative": 0.8,
+            "invasiveness": "low",
+            "result_time_days": 1,
+            "rules_out": ["essential_hypertension"],
+            "normal_range": "0.8-1.8 ng/dL",
+            "abnormal_direction": "low"
+          },
+          "tpo_antibodies": {
+            "display_name": "Anti-TPO Antibodies (Hashimoto's)",
+            "sensitivity": 0.95,
+            "specificity": 0.90,
+            "cost_relative": 1.0,
+            "invasiveness": "low",
+            "result_time_days": 2,
+            "rules_out": [],
+            "normal_range": "< 35 IU/mL",
+            "abnormal_direction": "elevated"
+          },
+          "lipid_panel": {
+            "display_name": "Fasting Lipid Panel",
+            "sensitivity": 0.55,
+            "specificity": 0.60,
+            "cost_relative": 0.5,
+            "invasiveness": "low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "LDL < 100 mg/dL",
+            "abnormal_direction": "elevated_ldl"
+          }
+        },
+  
+        "red_flags": [
+          "Fatigue with cold intolerance and weight gain",
+          "Diastolic hypertension with elevated cholesterol",
+          "Hair thinning with dry skin",
+          "Depression not responding to antidepressants",
+          "Family history of thyroid disease"
+        ]
+      },
+  
+      "systemic_lupus": {
+        "display_name": "Systemic Lupus Erythematosus (SLE)",
+        "category": "autoimmune",
+        "prevalence_general": 0.001,
+        "prevalence_in_hypertension": 0.005,
+        "prevalence_in_diabetes": 0.003,
+        "avg_diagnostic_delay_months": 72,
+        "mimics": ["essential_hypertension", "type2_diabetes"],
+        "description": "Systemic autoimmune disease with average diagnostic delay of 6 years. Presents with fluctuating multi-system symptoms frequently attributed to stress, fibromyalgia, or depression.",
+  
+        "trigger_indicators": {
+          "required_common_flags": [],
+          "symptom_overlap_score_threshold": 0.35
+        },
+  
+        "clinical_features": {
+          "fatigue": {"weight": 0.4, "present_in_pct": 0.90},
+          "joint_pain": {"weight": 0.7, "present_in_pct": 0.85},
+          "malar_rash": {"weight": 0.98, "present_in_pct": 0.55},
+          "photosensitivity": {"weight": 0.85, "present_in_pct": 0.70},
+          "oral_ulcers": {"weight": 0.80, "present_in_pct": 0.45},
+          "hair_loss": {"weight": 0.6, "present_in_pct": 0.50},
+          "raynauds": {"weight": 0.7, "present_in_pct": 0.35},
+          "pleuritis_chest_pain": {"weight": 0.8, "present_in_pct": 0.40},
+          "fever_intermittent": {"weight": 0.6, "present_in_pct": 0.50},
+          "hypertension": {"weight": 0.5, "present_in_pct": 0.50}
+        },
+  
+        "distinguishing_tests": {
+          "ana_test": {
+            "display_name": "ANA (Antinuclear Antibody) Screen",
+            "sensitivity": 0.97,
+            "specificity": 0.74,
+            "cost_relative": 0.9,
+            "invasiveness": "low",
+            "result_time_days": 3,
+            "rules_out": [],
+            "normal_range": "Negative (< 1:40 titer)",
+            "abnormal_direction": "positive"
+          },
+          "anti_dsdna": {
+            "display_name": "Anti-dsDNA Antibodies",
+            "sensitivity": 0.70,
+            "specificity": 0.97,
+            "cost_relative": 1.2,
+            "invasiveness": "low",
+            "result_time_days": 3,
+            "rules_out": ["essential_hypertension"],
+            "normal_range": "< 30 IU/mL",
+            "abnormal_direction": "elevated"
+          },
+          "complement_c3_c4": {
+            "display_name": "Complement C3 and C4 Levels",
+            "sensitivity": 0.65,
+            "specificity": 0.80,
+            "cost_relative": 1.0,
+            "invasiveness": "low",
+            "result_time_days": 2,
+            "rules_out": [],
+            "normal_range": "C3: 90-180 mg/dL, C4: 16-47 mg/dL",
+            "abnormal_direction": "low"
+          },
+          "urinalysis_protein": {
+            "display_name": "Urinalysis with Protein/Creatinine Ratio",
+            "sensitivity": 0.75,
+            "specificity": 0.85,
+            "cost_relative": 0.5,
+            "invasiveness": "very_low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "Protein/Creatinine < 0.2",
+            "abnormal_direction": "elevated_protein"
+          }
+        },
+  
+        "red_flags": [
+          "Young woman with joint pain, fatigue, and rash",
+          "Butterfly rash across cheeks and nose bridge",
+          "Multiple system involvement (joints + kidneys + skin)",
+          "Symptoms worsen with sun exposure",
+          "Recurrent oral ulcers with fatigue"
+        ]
+      },
+  
+      "early_rheumatoid_arthritis": {
+        "display_name": "Early Rheumatoid Arthritis",
+        "category": "autoimmune",
+        "prevalence_general": 0.01,
+        "prevalence_in_hypertension": 0.015,
+        "prevalence_in_diabetes": 0.01,
+        "avg_diagnostic_delay_months": 9,
+        "mimics": ["essential_hypertension", "obesity_metabolic"],
+        "description": "Chronic inflammatory joint disease where early detection dramatically improves outcomes. Often initially dismissed as mechanical joint pain or fibromyalgia.",
+  
+        "trigger_indicators": {
+          "required_common_flags": [],
+          "symptom_overlap_score_threshold": 0.3
+        },
+  
+        "clinical_features": {
+          "morning_stiffness_1hr": {"weight": 0.85, "present_in_pct": 0.90},
+          "symmetric_joint_swelling": {"weight": 0.90, "present_in_pct": 0.80},
+          "small_joint_involvement": {"weight": 0.85, "present_in_pct": 0.85},
+          "fatigue": {"weight": 0.3, "present_in_pct": 0.85},
+          "low_grade_fever": {"weight": 0.5, "present_in_pct": 0.40},
+          "weight_loss": {"weight": 0.4, "present_in_pct": 0.35},
+          "joint_pain_bilateral": {"weight": 0.8, "present_in_pct": 0.95},
+          "grip_weakness": {"weight": 0.7, "present_in_pct": 0.70}
+        },
+  
+        "distinguishing_tests": {
+          "rf_rheumatoid_factor": {
+            "display_name": "Rheumatoid Factor (RF)",
+            "sensitivity": 0.70,
+            "specificity": 0.82,
+            "cost_relative": 0.7,
+            "invasiveness": "low",
+            "result_time_days": 2,
+            "rules_out": [],
+            "normal_range": "< 14 IU/mL",
+            "abnormal_direction": "elevated"
+          },
+          "anti_ccp": {
+            "display_name": "Anti-CCP Antibodies",
+            "sensitivity": 0.67,
+            "specificity": 0.96,
+            "cost_relative": 1.3,
+            "invasiveness": "low",
+            "result_time_days": 3,
+            "rules_out": ["obesity_metabolic"],
+            "normal_range": "< 20 U/mL",
+            "abnormal_direction": "elevated"
+          },
+          "crp_esr": {
+            "display_name": "CRP and ESR (Inflammatory Markers)",
+            "sensitivity": 0.75,
+            "specificity": 0.65,
+            "cost_relative": 0.6,
+            "invasiveness": "low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "CRP < 1.0 mg/dL, ESR < 20 mm/hr",
+            "abnormal_direction": "elevated"
+          },
+          "xray_hands_feet": {
+            "display_name": "X-Ray Hands and Feet",
+            "sensitivity": 0.60,
+            "specificity": 0.90,
+            "cost_relative": 1.5,
+            "invasiveness": "low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "No erosions or joint space narrowing",
+            "abnormal_direction": "erosions_present"
+          }
+        },
+  
+        "red_flags": [
+          "Morning stiffness lasting more than 1 hour",
+          "Symmetric swelling of small joints (MCP, PIP)",
+          "Joint symptoms persisting more than 6 weeks",
+          "Elevated inflammatory markers (CRP/ESR)",
+          "Family history of autoimmune disease"
+        ]
+      },
+  
+      "sjogrens_syndrome": {
+        "display_name": "Sjögren's Syndrome",
+        "category": "autoimmune",
+        "prevalence_general": 0.003,
+        "prevalence_in_hypertension": 0.004,
+        "prevalence_in_diabetes": 0.005,
+        "avg_diagnostic_delay_months": 48,
+        "mimics": ["essential_hypertension", "type2_diabetes", "obesity_metabolic"],
+        "description": "Autoimmune exocrinopathy causing dry eyes and mouth. Average diagnostic delay of 4 years due to non-specific symptoms attributed to aging, medications, or anxiety.",
+  
+        "trigger_indicators": {
+          "required_common_flags": [],
+          "symptom_overlap_score_threshold": 0.3
+        },
+  
+        "clinical_features": {
+          "dry_eyes": {"weight": 0.85, "present_in_pct": 0.95},
+          "dry_mouth": {"weight": 0.85, "present_in_pct": 0.95},
+          "fatigue": {"weight": 0.4, "present_in_pct": 0.85},
+          "joint_pain": {"weight": 0.6, "present_in_pct": 0.60},
+          "parotid_swelling": {"weight": 0.90, "present_in_pct": 0.35},
+          "dental_cavities_multiple": {"weight": 0.7, "present_in_pct": 0.55},
+          "vaginal_dryness": {"weight": 0.75, "present_in_pct": 0.50},
+          "peripheral_neuropathy": {"weight": 0.7, "present_in_pct": 0.25}
+        },
+  
+        "distinguishing_tests": {
+          "anti_ssa_ssb": {
+            "display_name": "Anti-SSA (Ro) and Anti-SSB (La) Antibodies",
+            "sensitivity": 0.75,
+            "specificity": 0.92,
+            "cost_relative": 1.2,
+            "invasiveness": "low",
+            "result_time_days": 3,
+            "rules_out": ["essential_hypertension", "type2_diabetes"],
+            "normal_range": "Negative",
+            "abnormal_direction": "positive"
+          },
+          "schirmer_test": {
+            "display_name": "Schirmer's Test (Tear Production)",
+            "sensitivity": 0.77,
+            "specificity": 0.83,
+            "cost_relative": 0.5,
+            "invasiveness": "very_low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "> 5mm wetting in 5 minutes",
+            "abnormal_direction": "reduced"
+          },
+          "ana_test": {
+            "display_name": "ANA Screen",
+            "sensitivity": 0.85,
+            "specificity": 0.74,
+            "cost_relative": 0.9,
+            "invasiveness": "low",
+            "result_time_days": 3,
+            "rules_out": [],
+            "normal_range": "Negative",
+            "abnormal_direction": "positive"
+          },
+          "lip_biopsy": {
+            "display_name": "Minor Salivary Gland Biopsy",
+            "sensitivity": 0.83,
+            "specificity": 0.95,
+            "cost_relative": 3.0,
+            "invasiveness": "moderate",
+            "result_time_days": 7,
+            "rules_out": ["essential_hypertension", "type2_diabetes", "obesity_metabolic"],
+            "normal_range": "Focus score < 1",
+            "abnormal_direction": "elevated_focus_score"
+          }
+        },
+  
+        "red_flags": [
+          "Persistent dry eyes and dry mouth",
+          "Recurrent dental cavities without explanation",
+          "Fatigue with joint pain in middle-aged woman",
+          "Parotid gland enlargement",
+          "Positive ANA with sicca symptoms"
+        ]
+      },
+  
+      "antiphospholipid_syndrome": {
+        "display_name": "Antiphospholipid Syndrome (APS)",
+        "category": "autoimmune",
+        "prevalence_general": 0.001,
+        "prevalence_in_hypertension": 0.008,
+        "prevalence_in_diabetes": 0.004,
+        "avg_diagnostic_delay_months": 36,
+        "mimics": ["essential_hypertension", "high_cvd_risk"],
+        "description": "Autoimmune thrombophilia causing recurrent clots and pregnancy losses. Frequently presents as resistant hypertension or recurrent cardiovascular events without recognized underlying cause.",
+  
+        "trigger_indicators": {
+          "required_common_flags": ["essential_hypertension", "high_cvd_risk"],
+          "symptom_overlap_score_threshold": 0.35
+        },
+  
+        "clinical_features": {
+          "recurrent_thrombosis": {"weight": 0.95, "present_in_pct": 0.70},
+          "livedo_reticularis": {"weight": 0.90, "present_in_pct": 0.40},
+          "recurrent_miscarriage": {"weight": 0.95, "present_in_pct": 0.35},
+          "hypertension": {"weight": 0.5, "present_in_pct": 0.55},
+          "thrombocytopenia": {"weight": 0.7, "present_in_pct": 0.30},
+          "migraine": {"weight": 0.5, "present_in_pct": 0.45},
+          "early_stroke": {"weight": 0.85, "present_in_pct": 0.25},
+          "cardiac_valve_disease": {"weight": 0.75, "present_in_pct": 0.30}
+        },
+  
+        "distinguishing_tests": {
+          "anticardiolipin_antibodies": {
+            "display_name": "Anticardiolipin Antibodies (IgG/IgM)",
+            "sensitivity": 0.80,
+            "specificity": 0.97,
+            "cost_relative": 1.3,
+            "invasiveness": "low",
+            "result_time_days": 4,
+            "rules_out": ["essential_hypertension"],
+            "normal_range": "< 40 GPL/MPL units",
+            "abnormal_direction": "elevated"
+          },
+          "lupus_anticoagulant": {
+            "display_name": "Lupus Anticoagulant Screen",
+            "sensitivity": 0.75,
+            "specificity": 0.96,
+            "cost_relative": 1.5,
+            "invasiveness": "low",
+            "result_time_days": 3,
+            "rules_out": ["essential_hypertension", "high_cvd_risk"],
+            "normal_range": "Negative",
+            "abnormal_direction": "positive"
+          },
+          "beta2_glycoprotein": {
+            "display_name": "Anti-Beta2 Glycoprotein I Antibodies",
+            "sensitivity": 0.65,
+            "specificity": 0.98,
+            "cost_relative": 1.4,
+            "invasiveness": "low",
+            "result_time_days": 4,
+            "rules_out": ["essential_hypertension"],
+            "normal_range": "< 20 U/mL",
+            "abnormal_direction": "elevated"
+          },
+          "coagulation_panel": {
+            "display_name": "Full Coagulation Panel (PT, aPTT)",
+            "sensitivity": 0.60,
+            "specificity": 0.70,
+            "cost_relative": 0.8,
+            "invasiveness": "low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "PT 11-13.5s, aPTT 25-35s",
+            "abnormal_direction": "prolonged_aptt"
+          }
+        },
+  
+        "red_flags": [
+          "Unexplained arterial or venous thrombosis under age 50",
+          "Recurrent pregnancy loss (2+ miscarriages)",
+          "Livedo reticularis (net-like skin discoloration)",
+          "Stroke in young patient without traditional risk factors",
+          "Thrombocytopenia with clotting history"
+        ]
+      },
+
+      "pheochromocytoma": {
+        "display_name": "Pheochromocytoma",
+        "category": "endocrine",
+        "prevalence_general": 0.0002,
+        "prevalence_in_hypertension": 0.005,
+        "prevalence_in_diabetes": 0.001,
+        "avg_diagnostic_delay_months": 36,
+        "mimics": ["essential_hypertension"],
+        "description": "Adrenal tumour secreting catecholamines causing episodic hypertension, sweating and headaches — frequently mistaken for treatment-resistant hypertension.",
+
+        "trigger_indicators": {
+          "required_common_flags": ["essential_hypertension"],
+          "symptom_overlap_score_threshold": 0.3
+        },
+
+        "clinical_features": {
+          "hypertension_resistant": {"weight": 0.9, "present_in_pct": 0.90},
+          "hypertension": {"weight": 0.7, "present_in_pct": 0.95},
+          "fatigue": {"weight": 0.3, "present_in_pct": 0.50},
+          "cardiac_valve_disease": {"weight": 0.5, "present_in_pct": 0.40},
+          "hyperglycemia": {"weight": 0.4, "present_in_pct": 0.45},
+          "weight_gain": {"weight": 0.2, "present_in_pct": 0.20}
+        },
+
+        "distinguishing_tests": {
+          "plasma_metanephrines": {
+            "display_name": "Plasma Free Metanephrines",
+            "sensitivity": 0.97,
+            "specificity": 0.85,
+            "cost_relative": 2.0,
+            "invasiveness": "very_low",
+            "result_time_days": 3,
+            "rules_out": ["essential_hypertension"],
+            "normal_range": "Metanephrine < 0.5 nmol/L, Normetanephrine < 0.9 nmol/L",
+            "abnormal_direction": "elevated"
+          },
+          "24h_urinary_catecholamines": {
+            "display_name": "24-hour Urinary Catecholamines",
+            "sensitivity": 0.87,
+            "specificity": 0.90,
+            "cost_relative": 1.5,
+            "invasiveness": "low",
+            "result_time_days": 2,
+            "rules_out": [],
+            "normal_range": "Epinephrine < 20 mcg/24h, Norepinephrine < 80 mcg/24h",
+            "abnormal_direction": "elevated"
+          }
+        },
+
+        "red_flags": [
+          "Paroxysmal hypertensive episodes (headache, sweating, palpitations triad)",
+          "Hypertension refractory to 3+ antihypertensives",
+          "Hypertensive crisis triggered by anaesthesia, surgery, or medication",
+          "Adrenal incidentaloma on imaging",
+          "Family history of MEN2 or VHL syndrome"
+        ]
+      },
+
+      "graves_disease": {
+        "display_name": "Graves' Disease (Hyperthyroidism)",
+        "category": "autoimmune",
+        "prevalence_general": 0.005,
+        "prevalence_in_hypertension": 0.02,
+        "prevalence_in_diabetes": 0.01,
+        "avg_diagnostic_delay_months": 18,
+        "mimics": ["essential_hypertension", "high_cvd_risk"],
+        "description": "Autoimmune hyperthyroidism causing tachycardia, hypertension, and weight loss — commonly misattributed to anxiety or cardiovascular disease.",
+
+        "trigger_indicators": {
+          "required_common_flags": [],
+          "symptom_overlap_score_threshold": 0.25
+        },
+
+        "clinical_features": {
+          "cardiac_valve_disease": {"weight": 0.7, "present_in_pct": 0.75},
+          "fatigue": {"weight": 0.5, "present_in_pct": 0.80},
+          "hypertension": {"weight": 0.4, "present_in_pct": 0.50},
+          "muscle_weakness": {"weight": 0.6, "present_in_pct": 0.60},
+          "joint_pain": {"weight": 0.3, "present_in_pct": 0.30},
+          "elevated_cholesterol": {"weight": 0.2, "present_in_pct": 0.20},
+          "early_stroke": {"weight": 0.4, "present_in_pct": 0.15}
+        },
+
+        "distinguishing_tests": {
+          "tsh_ft4": {
+            "display_name": "TSH + Free T4",
+            "sensitivity": 0.99,
+            "specificity": 0.98,
+            "cost_relative": 0.5,
+            "invasiveness": "very_low",
+            "result_time_days": 1,
+            "rules_out": ["essential_hypertension"],
+            "normal_range": "TSH 0.4–4.0 mIU/L, FT4 0.8–1.8 ng/dL",
+            "abnormal_direction": "suppressed_tsh_elevated_ft4"
+          },
+          "trab_antibodies": {
+            "display_name": "TSH Receptor Antibodies (TRAb)",
+            "sensitivity": 0.95,
+            "specificity": 0.99,
+            "cost_relative": 1.2,
+            "invasiveness": "very_low",
+            "result_time_days": 3,
+            "rules_out": [],
+            "normal_range": "< 1.75 IU/L",
+            "abnormal_direction": "elevated"
+          }
+        },
+
+        "red_flags": [
+          "Unintentional weight loss despite normal or increased appetite",
+          "Resting heart rate persistently > 100 bpm",
+          "Exophthalmos (bulging eyes) or pretibial myxedema",
+          "Atrial fibrillation in patient under 60 without known cause",
+          "Heat intolerance and excessive sweating"
+        ]
+      },
+
+      "obstructive_sleep_apnea": {
+        "display_name": "Obstructive Sleep Apnea",
+        "category": "sleep",
+        "prevalence_general": 0.15,
+        "prevalence_in_hypertension": 0.35,
+        "prevalence_in_diabetes": 0.30,
+        "avg_diagnostic_delay_months": 60,
+        "mimics": ["essential_hypertension", "type2_diabetes"],
+        "description": "Intermittent upper airway obstruction during sleep causing chronic hypoxia — a major unrecognised driver of resistant hypertension and metabolic syndrome.",
+
+        "trigger_indicators": {
+          "required_common_flags": ["essential_hypertension"],
+          "symptom_overlap_score_threshold": 0.3
+        },
+
+        "clinical_features": {
+          "fatigue_chronic": {"weight": 0.9, "present_in_pct": 0.95},
+          "fatigue": {"weight": 0.7, "present_in_pct": 0.90},
+          "hypertension_resistant": {"weight": 0.7, "present_in_pct": 0.50},
+          "weight_gain_central": {"weight": 0.6, "present_in_pct": 0.70},
+          "weight_gain": {"weight": 0.5, "present_in_pct": 0.65},
+          "hyperglycemia": {"weight": 0.4, "present_in_pct": 0.40},
+          "cardiac_valve_disease": {"weight": 0.3, "present_in_pct": 0.30},
+          "hypertension": {"weight": 0.6, "present_in_pct": 0.60},
+          "erectile_dysfunction": {"weight": 0.5, "present_in_pct": 0.40}
+        },
+
+        "distinguishing_tests": {
+          "polysomnography": {
+            "display_name": "Polysomnography (Sleep Study)",
+            "sensitivity": 0.95,
+            "specificity": 0.90,
+            "cost_relative": 4.0,
+            "invasiveness": "low",
+            "result_time_days": 7,
+            "rules_out": [],
+            "normal_range": "AHI < 5 events/hour",
+            "abnormal_direction": "elevated_ahi"
+          },
+          "home_sleep_test": {
+            "display_name": "Home Sleep Apnea Test",
+            "sensitivity": 0.80,
+            "specificity": 0.85,
+            "cost_relative": 1.5,
+            "invasiveness": "very_low",
+            "result_time_days": 3,
+            "rules_out": [],
+            "normal_range": "AHI < 5 events/hour",
+            "abnormal_direction": "elevated_ahi"
+          }
+        },
+
+        "red_flags": [
+          "Chronic daytime fatigue unresponsive to adequate sleep",
+          "Witnessed apnoeas or loud snoring reported by partner",
+          "Morning headaches with neck circumference > 40 cm (women) / 43 cm (men)",
+          "Resistant hypertension despite 3+ antihypertensives",
+          "Nocturia (waking 2+ times per night to urinate)"
+        ]
+      },
+
+      "atrial_fibrillation": {
+        "display_name": "Undiagnosed Atrial Fibrillation",
+        "category": "cardiovascular",
+        "prevalence_general": 0.02,
+        "prevalence_in_hypertension": 0.08,
+        "prevalence_in_diabetes": 0.05,
+        "avg_diagnostic_delay_months": 24,
+        "mimics": ["high_cvd_risk", "essential_hypertension"],
+        "description": "Paroxysmal or persistent AF is frequently missed until a stroke occurs — hypertension and diabetes are the two leading modifiable risk factors.",
+
+        "trigger_indicators": {
+          "required_common_flags": ["high_cvd_risk"],
+          "symptom_overlap_score_threshold": 0.3
+        },
+
+        "clinical_features": {
+          "early_stroke": {"weight": 0.9, "present_in_pct": 0.30},
+          "cardiac_valve_disease": {"weight": 0.8, "present_in_pct": 0.60},
+          "hypertension": {"weight": 0.6, "present_in_pct": 0.70},
+          "fatigue": {"weight": 0.5, "present_in_pct": 0.65},
+          "fatigue_chronic": {"weight": 0.4, "present_in_pct": 0.55},
+          "recurrent_thrombosis": {"weight": 0.7, "present_in_pct": 0.25},
+          "elevated_cholesterol": {"weight": 0.3, "present_in_pct": 0.50}
+        },
+
+        "distinguishing_tests": {
+          "ecg_holter": {
+            "display_name": "24-48h Holter ECG Monitor",
+            "sensitivity": 0.85,
+            "specificity": 0.99,
+            "cost_relative": 1.5,
+            "invasiveness": "very_low",
+            "result_time_days": 3,
+            "rules_out": [],
+            "normal_range": "Regular sinus rhythm throughout",
+            "abnormal_direction": "irregular_rhythm"
+          },
+          "bnp_proBNP": {
+            "display_name": "BNP / Pro-BNP",
+            "sensitivity": 0.75,
+            "specificity": 0.80,
+            "cost_relative": 0.8,
+            "invasiveness": "very_low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "BNP < 100 pg/mL",
+            "abnormal_direction": "elevated"
+          }
+        },
+
+        "red_flags": [
+          "Palpitations, especially irregular or episodic",
+          "Unexplained fatigue or exercise intolerance",
+          "Stroke or TIA without identified cardioembolic source",
+          "Irregular pulse on clinical examination",
+          "Hypertension plus diabetes in patient over 55"
+        ]
+      },
+
+      "hemochromatosis": {
+        "display_name": "Hereditary Hemochromatosis",
+        "category": "metabolic",
+        "prevalence_general": 0.003,
+        "prevalence_in_hypertension": 0.005,
+        "prevalence_in_diabetes": 0.01,
+        "avg_diagnostic_delay_months": 120,
+        "mimics": ["type2_diabetes"],
+        "description": "Iron overload disorder causing diabetes, liver disease, and joint pain — often diagnosed only after significant organ damage has occurred.",
+
+        "trigger_indicators": {
+          "required_common_flags": ["type2_diabetes"],
+          "symptom_overlap_score_threshold": 0.25
+        },
+
+        "clinical_features": {
+          "fatigue": {"weight": 0.8, "present_in_pct": 0.80},
+          "joint_pain": {"weight": 0.8, "present_in_pct": 0.75},
+          "hyperglycemia": {"weight": 0.7, "present_in_pct": 0.65},
+          "fatigue_chronic": {"weight": 0.6, "present_in_pct": 0.70},
+          "weight_gain": {"weight": 0.3, "present_in_pct": 0.30},
+          "muscle_weakness": {"weight": 0.5, "present_in_pct": 0.45},
+          "elevated_cholesterol": {"weight": 0.2, "present_in_pct": 0.25}
+        },
+
+        "distinguishing_tests": {
+          "serum_ferritin_transferrin": {
+            "display_name": "Serum Ferritin + Transferrin Saturation",
+            "sensitivity": 0.90,
+            "specificity": 0.80,
+            "cost_relative": 0.5,
+            "invasiveness": "very_low",
+            "result_time_days": 1,
+            "rules_out": ["type2_diabetes"],
+            "normal_range": "Ferritin 12–300 ng/mL, Transferrin sat < 45%",
+            "abnormal_direction": "elevated"
+          },
+          "hfe_gene_test": {
+            "display_name": "HFE Gene Mutation Panel",
+            "sensitivity": 0.85,
+            "specificity": 0.99,
+            "cost_relative": 3.0,
+            "invasiveness": "very_low",
+            "result_time_days": 14,
+            "rules_out": [],
+            "normal_range": "No C282Y / H63D mutation",
+            "abnormal_direction": "mutation_detected"
+          }
+        },
+
+        "red_flags": [
+          "Diabetes with unexplained liver enzyme elevation (AST/ALT)",
+          "Bronze skin discoloration or hyperpigmentation",
+          "Arthropathy of 2nd and 3rd MCP joints (unusual distribution)",
+          "Unexplained fatigue in Northern European descent patient",
+          "Hypogonadism or loss of libido alongside metabolic symptoms"
+        ]
+      },
+
+      "nafld_nash": {
+        "display_name": "NAFLD / Metabolic-Associated Fatty Liver",
+        "category": "metabolic",
+        "prevalence_general": 0.25,
+        "prevalence_in_hypertension": 0.40,
+        "prevalence_in_diabetes": 0.55,
+        "avg_diagnostic_delay_months": 48,
+        "mimics": ["type2_diabetes", "obesity_metabolic"],
+        "description": "Non-alcoholic fatty liver disease is the most common liver disease globally, frequently undetected until cirrhosis in patients with metabolic syndrome.",
+
+        "trigger_indicators": {
+          "required_common_flags": ["type2_diabetes"],
+          "symptom_overlap_score_threshold": 0.35
+        },
+
+        "clinical_features": {
+          "weight_gain_central": {"weight": 0.8, "present_in_pct": 0.85},
+          "weight_gain": {"weight": 0.7, "present_in_pct": 0.80},
+          "fatigue": {"weight": 0.6, "present_in_pct": 0.70},
+          "hyperglycemia": {"weight": 0.7, "present_in_pct": 0.75},
+          "elevated_cholesterol": {"weight": 0.6, "present_in_pct": 0.70},
+          "hypertension": {"weight": 0.4, "present_in_pct": 0.55},
+          "fatigue_chronic": {"weight": 0.4, "present_in_pct": 0.50}
+        },
+
+        "distinguishing_tests": {
+          "liver_ultrasound": {
+            "display_name": "Hepatic Ultrasound",
+            "sensitivity": 0.85,
+            "specificity": 0.90,
+            "cost_relative": 1.2,
+            "invasiveness": "very_low",
+            "result_time_days": 2,
+            "rules_out": [],
+            "normal_range": "No hepatic steatosis or fibrosis",
+            "abnormal_direction": "echogenic_liver"
+          },
+          "fibroscan": {
+            "display_name": "FibroScan (Liver Elastography)",
+            "sensitivity": 0.88,
+            "specificity": 0.85,
+            "cost_relative": 2.5,
+            "invasiveness": "very_low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "< 7 kPa (no significant fibrosis)",
+            "abnormal_direction": "elevated_stiffness"
+          }
+        },
+
+        "red_flags": [
+          "Incidentally elevated ALT/AST in metabolic syndrome patient",
+          "Obesity with right upper quadrant discomfort",
+          "Diabetes poorly controlled despite medication adherence",
+          "Dyslipidaemia with low HDL and high triglycerides",
+          "Thrombocytopenia in obese patient (may indicate cirrhosis)"
+        ]
+      },
+
+      "polymyalgia_rheumatica": {
+        "display_name": "Polymyalgia Rheumatica",
+        "category": "autoimmune",
+        "prevalence_general": 0.002,
+        "prevalence_in_hypertension": 0.003,
+        "prevalence_in_diabetes": 0.002,
+        "avg_diagnostic_delay_months": 14,
+        "mimics": ["essential_hypertension"],
+        "description": "Inflammatory condition of shoulder and pelvic girdle muscles in patients over 50 — misdiagnosed as degenerative arthritis or fibromyalgia for over a year on average.",
+
+        "trigger_indicators": {
+          "required_common_flags": [],
+          "symptom_overlap_score_threshold": 0.25
+        },
+
+        "clinical_features": {
+          "muscle_weakness": {"weight": 0.9, "present_in_pct": 0.95},
+          "joint_pain": {"weight": 0.8, "present_in_pct": 0.90},
+          "fatigue": {"weight": 0.7, "present_in_pct": 0.85},
+          "fatigue_chronic": {"weight": 0.5, "present_in_pct": 0.70},
+          "hypertension": {"weight": 0.2, "present_in_pct": 0.30},
+          "elevated_cholesterol": {"weight": 0.1, "present_in_pct": 0.25}
+        },
+
+        "distinguishing_tests": {
+          "crp_esr": {
+            "display_name": "CRP + ESR (Inflammation Markers)",
+            "sensitivity": 0.92,
+            "specificity": 0.70,
+            "cost_relative": 0.4,
+            "invasiveness": "very_low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "CRP < 5 mg/L, ESR < 20 mm/hr",
+            "abnormal_direction": "elevated"
+          },
+          "mri_shoulder_pelvis": {
+            "display_name": "MRI Shoulder / Pelvis Girdle",
+            "sensitivity": 0.80,
+            "specificity": 0.92,
+            "cost_relative": 5.0,
+            "invasiveness": "low",
+            "result_time_days": 7,
+            "rules_out": [],
+            "normal_range": "No bursitis or synovitis",
+            "abnormal_direction": "bursitis_synovitis"
+          }
+        },
+
+        "red_flags": [
+          "Bilateral shoulder and hip girdle stiffness > 45 minutes each morning",
+          "Difficulty raising arms above shoulder height",
+          "Rapid response to low-dose prednisolone (diagnostic)",
+          "New headache or jaw claudication (giant cell arteritis complication)",
+          "Profound fatigue with markedly elevated CRP in patient over 50"
+        ]
+      },
+
+      "polycythemia_vera": {
+        "display_name": "Polycythemia Vera",
+        "category": "hematological",
+        "prevalence_general": 0.00022,
+        "prevalence_in_hypertension": 0.003,
+        "prevalence_in_diabetes": 0.001,
+        "avg_diagnostic_delay_months": 24,
+        "mimics": ["essential_hypertension", "high_cvd_risk"],
+        "description": "Myeloproliferative disorder causing blood hyperviscosity, hypertension, and thrombosis — often found incidentally or after a stroke/DVT.",
+
+        "trigger_indicators": {
+          "required_common_flags": ["essential_hypertension", "high_cvd_risk"],
+          "symptom_overlap_score_threshold": 0.3
+        },
+
+        "clinical_features": {
+          "hypertension_resistant": {"weight": 0.7, "present_in_pct": 0.55},
+          "hypertension": {"weight": 0.6, "present_in_pct": 0.60},
+          "recurrent_thrombosis": {"weight": 0.9, "present_in_pct": 0.40},
+          "early_stroke": {"weight": 0.8, "present_in_pct": 0.20},
+          "fatigue": {"weight": 0.5, "present_in_pct": 0.70},
+          "fatigue_chronic": {"weight": 0.4, "present_in_pct": 0.60},
+          "joint_pain": {"weight": 0.3, "present_in_pct": 0.40}
+        },
+
+        "distinguishing_tests": {
+          "full_blood_count": {
+            "display_name": "Full Blood Count (FBC)",
+            "sensitivity": 0.90,
+            "specificity": 0.75,
+            "cost_relative": 0.3,
+            "invasiveness": "very_low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "Hb 12–17 g/dL, Haematocrit < 49% (M) / < 48% (F)",
+            "abnormal_direction": "elevated_hb_hematocrit"
+          },
+          "jak2_mutation": {
+            "display_name": "JAK2 V617F Mutation Test",
+            "sensitivity": 0.95,
+            "specificity": 0.99,
+            "cost_relative": 3.5,
+            "invasiveness": "very_low",
+            "result_time_days": 10,
+            "rules_out": [],
+            "normal_range": "JAK2 V617F not detected",
+            "abnormal_direction": "mutation_detected"
+          }
+        },
+
+        "red_flags": [
+          "Facial plethora (reddish complexion) with hypertension",
+          "Aquagenic pruritus (itching after hot shower)",
+          "Thrombosis at unusual sites (portal, hepatic, splenic vein)",
+          "Splenomegaly on examination or imaging",
+          "Unexplained elevated haematocrit on routine blood test"
+        ]
+      },
+
+      "vitamin_d_deficiency": {
+        "display_name": "Severe Vitamin D Deficiency",
+        "category": "metabolic",
+        "prevalence_general": 0.40,
+        "prevalence_in_hypertension": 0.50,
+        "prevalence_in_diabetes": 0.55,
+        "avg_diagnostic_delay_months": 36,
+        "mimics": ["essential_hypertension", "type2_diabetes"],
+        "description": "Clinically significant vitamin D deficiency is a modifiable driver of fatigue, musculoskeletal pain, and cardiometabolic risk — routinely overlooked in standard workups.",
+
+        "trigger_indicators": {
+          "required_common_flags": [],
+          "symptom_overlap_score_threshold": 0.25
+        },
+
+        "clinical_features": {
+          "fatigue_chronic": {"weight": 0.8, "present_in_pct": 0.85},
+          "fatigue": {"weight": 0.7, "present_in_pct": 0.80},
+          "muscle_weakness": {"weight": 0.8, "present_in_pct": 0.75},
+          "joint_pain": {"weight": 0.6, "present_in_pct": 0.60},
+          "hypertension": {"weight": 0.3, "present_in_pct": 0.40},
+          "elevated_cholesterol": {"weight": 0.2, "present_in_pct": 0.30},
+          "weight_gain": {"weight": 0.2, "present_in_pct": 0.35}
+        },
+
+        "distinguishing_tests": {
+          "serum_25oh_vitamin_d": {
+            "display_name": "Serum 25-OH Vitamin D",
+            "sensitivity": 0.99,
+            "specificity": 0.99,
+            "cost_relative": 0.6,
+            "invasiveness": "very_low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "> 50 nmol/L (> 20 ng/mL)",
+            "abnormal_direction": "low"
+          },
+          "pth_calcium": {
+            "display_name": "PTH + Serum Calcium",
+            "sensitivity": 0.75,
+            "specificity": 0.85,
+            "cost_relative": 0.5,
+            "invasiveness": "very_low",
+            "result_time_days": 1,
+            "rules_out": [],
+            "normal_range": "PTH 15–65 pg/mL, Calcium 2.2–2.6 mmol/L",
+            "abnormal_direction": "elevated_pth_low_calcium"
+          }
+        },
+
+        "red_flags": [
+          "Chronic fatigue and musculoskeletal pain in high-latitude or indoor-lifestyle patient",
+          "Recurrent respiratory infections suggesting immune suppression",
+          "Depression with physical fatigue unresponsive to antidepressants",
+          "Bone pain or low-trauma fractures",
+          "Dark skin tone, obesity, or limited sun exposure (major risk factors)"
+        ]
+      },
+
+      "celiac_disease": {
+        "display_name": "Celiac Disease",
+        "category": "autoimmune",
+        "prevalence_general": 0.01,
+        "prevalence_in_hypertension": 0.01,
+        "prevalence_in_diabetes": 0.06,
+        "avg_diagnostic_delay_months": 120,
+        "mimics": ["type2_diabetes"],
+        "description": "Autoimmune gluten enteropathy causing fatigue, anaemia, and nutritional deficiencies — the longest diagnostic delay of any common autoimmune disease.",
+
+        "trigger_indicators": {
+          "required_common_flags": [],
+          "symptom_overlap_score_threshold": 0.2
+        },
+
+        "clinical_features": {
+          "fatigue": {"weight": 0.8, "present_in_pct": 0.85},
+          "fatigue_chronic": {"weight": 0.7, "present_in_pct": 0.80},
+          "muscle_weakness": {"weight": 0.6, "present_in_pct": 0.55},
+          "joint_pain": {"weight": 0.5, "present_in_pct": 0.40},
+          "weight_gain": {"weight": 0.3, "present_in_pct": 0.25},
+          "hyperglycemia": {"weight": 0.4, "present_in_pct": 0.30},
+          "elevated_cholesterol": {"weight": 0.2, "present_in_pct": 0.20}
+        },
+
+        "distinguishing_tests": {
+          "ttg_iga": {
+            "display_name": "Anti-tTG IgA (Tissue Transglutaminase)",
+            "sensitivity": 0.95,
+            "specificity": 0.95,
+            "cost_relative": 0.6,
+            "invasiveness": "very_low",
+            "result_time_days": 2,
+            "rules_out": [],
+            "normal_range": "< 10 U/mL",
+            "abnormal_direction": "elevated"
+          },
+          "duodenal_biopsy": {
+            "display_name": "Duodenal Biopsy (Endoscopy)",
+            "sensitivity": 0.98,
+            "specificity": 0.99,
+            "cost_relative": 6.0,
+            "invasiveness": "high",
+            "result_time_days": 7,
+            "rules_out": [],
+            "normal_range": "No villous atrophy (Marsh 0)",
+            "abnormal_direction": "villous_atrophy"
+          }
+        },
+
+        "red_flags": [
+          "Chronic fatigue with iron-deficiency anaemia unresponsive to oral iron",
+          "Peripheral neuropathy of unknown cause",
+          "Osteoporosis in young patient without other risk factors",
+          "Dermatitis herpetiformis (blistering rash)",
+          "Type 1 diabetes or autoimmune thyroid disease (strong association)"
+        ]
+      },
+
+      "renal_artery_stenosis": {
+        "display_name": "Renal Artery Stenosis",
+        "category": "cardiovascular",
+        "prevalence_general": 0.005,
+        "prevalence_in_hypertension": 0.04,
+        "prevalence_in_diabetes": 0.02,
+        "avg_diagnostic_delay_months": 30,
+        "mimics": ["essential_hypertension"],
+        "description": "Narrowing of the renal arteries causing renovascular hypertension — a correctable secondary cause of treatment-resistant hypertension frequently attributed to essential HTN.",
+
+        "trigger_indicators": {
+          "required_common_flags": ["essential_hypertension"],
+          "symptom_overlap_score_threshold": 0.3
+        },
+
+        "clinical_features": {
+          "hypertension_resistant": {"weight": 0.9, "present_in_pct": 0.85},
+          "hypertension": {"weight": 0.7, "present_in_pct": 0.90},
+          "hypertension_diastolic": {"weight": 0.6, "present_in_pct": 0.60},
+          "elevated_cholesterol": {"weight": 0.4, "present_in_pct": 0.55},
+          "early_stroke": {"weight": 0.3, "present_in_pct": 0.15},
+          "fatigue": {"weight": 0.3, "present_in_pct": 0.40},
+          "recurrent_thrombosis": {"weight": 0.2, "present_in_pct": 0.10}
+        },
+
+        "distinguishing_tests": {
+          "renal_doppler_us": {
+            "display_name": "Renal Artery Doppler Ultrasound",
+            "sensitivity": 0.85,
+            "specificity": 0.92,
+            "cost_relative": 1.5,
+            "invasiveness": "very_low",
+            "result_time_days": 2,
+            "rules_out": ["essential_hypertension"],
+            "normal_range": "Peak systolic velocity < 180 cm/s, resistive index < 0.8",
+            "abnormal_direction": "elevated_velocity"
+          },
+          "plasma_renin": {
+            "display_name": "Plasma Renin Activity",
+            "sensitivity": 0.75,
+            "specificity": 0.70,
+            "cost_relative": 1.0,
+            "invasiveness": "very_low",
+            "result_time_days": 3,
+            "rules_out": [],
+            "normal_range": "0.5–4.0 ng/mL/h (on normal sodium diet)",
+            "abnormal_direction": "elevated"
+          }
+        },
+
+        "red_flags": [
+          "Hypertension onset before age 30 or abrupt worsening after age 55",
+          "Resistant hypertension despite 3+ drug regimen",
+          "Renal function deterioration after starting ACE inhibitor or ARB",
+          "Abdominal bruit on auscultation",
+          "Hypertension with atherosclerotic disease in other vascular beds"
+        ]
+      }
+    },
+
+    "symptom_to_feature_mapping": {
+      "HighBP": ["hypertension", "hypertension_resistant", "hypertension_diastolic"],
+      "HighChol": ["elevated_cholesterol"],
+      "BMI": ["weight_gain", "weight_gain_central", "obesity"],
+      "Smoker": [],
+      "HeartDiseaseorAttack": ["recurrent_thrombosis", "cardiac_valve_disease"],
+      "Stroke": ["early_stroke", "recurrent_thrombosis"],
+      "PhysActivity": ["fatigue", "muscle_weakness"],
+      "GenHlth": ["fatigue", "fatigue_chronic"],
+      "Age": [],
+      "Sex": [],
+      "DiffWalk": ["muscle_weakness", "joint_pain"]
+    },
+  
+    "test_panels": {
+      "endocrine_screen": {
+        "display_name": "Endocrine Screening Panel",
+        "tests": ["tsh", "morning_cortisol", "aldosterone_renin_ratio", "electrolytes_panel"],
+        "indication": "Resistant hypertension or metabolic symptoms"
+      },
+      "autoimmune_screen": {
+        "display_name": "Autoimmune Screening Panel",
+        "tests": ["ana_test", "crp_esr", "rf_rheumatoid_factor", "urinalysis_protein"],
+        "indication": "Multisystem symptoms in young/middle-aged patient"
+      },
+      "adrenal_panel": {
+        "display_name": "Adrenal Function Panel",
+        "tests": ["morning_cortisol", "24h_urinary_cortisol", "plasma_acth", "electrolytes_panel"],
+        "indication": "Suspected adrenal pathology"
+      }
+    }
+  }
+  
