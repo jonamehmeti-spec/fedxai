@@ -390,8 +390,30 @@ html, body, [class*="css"] {
     margin-bottom: 20px;
 }
 
+/* ── Mobile nav selectbox — hidden on desktop ─────────────────── */
+.mobile-nav { display: none; }
+
 /* ── Mobile ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+    /* Show top nav, hide sidebar entirely */
+    .mobile-nav {
+        display: block !important;
+        background: #0A1628;
+        padding: 10px 16px 12px 16px;
+        margin: -1rem -1rem 1.2rem -1rem;
+        border-bottom: 1px solid #1E2D45;
+    }
+    .mobile-nav label { display: none !important; }
+    .mobile-nav .stSelectbox > div > div {
+        background: #1E2D45 !important;
+        color: #C8D6E8 !important;
+        border: 1px solid #2E4060 !important;
+        border-radius: 8px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+    }
+    [data-testid="stSidebar"] { display: none !important; }
+    [data-testid="stSidebarNav"] { display: none !important; }
     /* Tighten page padding */
     .block-container {
         padding-top: 1rem !important;
@@ -508,6 +530,8 @@ def append_patient_record(patient_values: dict, pred_class: int, hospital_id: st
 
 
 # ── Sidebar ────────────────────────────────────────────────────────
+PAGES = ["Training Metrics", "Patient Predictor", "Privacy", "System Info"]
+
 with st.sidebar:
     st.markdown("<div class='sidebar-logo'>FedXAI</div>", unsafe_allow_html=True)
     st.markdown(
@@ -516,12 +540,7 @@ with st.sidebar:
     )
     st.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
 
-    page = st.radio("Navigate", [
-        "Training Metrics",
-        "Patient Predictor",
-        "Privacy",
-        "System Info"
-    ], label_visibility="collapsed")
+    sidebar_page = st.radio("Navigate", PAGES, label_visibility="collapsed")
 
     st.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
     st.markdown("""
@@ -529,6 +548,21 @@ with st.sidebar:
     <div class='sidebar-badge'><div class='sidebar-dot'></div>FedAvg aggregation</div>
     <div class='sidebar-badge'><div class='sidebar-dot'></div>SHAP + LLM explanations</div>
     """, unsafe_allow_html=True)
+
+# Mobile top nav — hidden on desktop via CSS, primary nav on mobile
+st.markdown("<div class='mobile-nav'>", unsafe_allow_html=True)
+mobile_page = st.selectbox("Go to", PAGES, label_visibility="collapsed")
+st.markdown("</div>", unsafe_allow_html=True)
+
+# Mobile nav wins on small screens; sidebar wins on desktop
+# We use a single session-state key so both controls stay in sync
+if "page" not in st.session_state:
+    st.session_state["page"] = PAGES[0]
+
+# Whichever changed last takes priority — detect via query param trick
+page = mobile_page if mobile_page != st.session_state.get("_last_sidebar", mobile_page) else sidebar_page
+st.session_state["_last_sidebar"] = sidebar_page
+st.session_state["page"] = page
 
 model, scaler, feature_names, model_ready = load_model_and_data()
 
