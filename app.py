@@ -582,13 +582,20 @@ model, scaler, feature_names, model_ready, shap_explainer = load_model_and_data(
 # ── Mobile top nav bar ─────────────────────────────────────────────
 st.markdown("""
 <style>
-/* Hide selectbox on desktop */
+/*
+  Streamlit wraps every widget in its own stElementContainer, so the
+  .mobile-nav-marker div and the selectbox are NOT DOM siblings —
+  the ~ selector fails. Use :has() to find the marker's parent
+  container, then hide the NEXT sibling container on desktop.
+*/
 @media (min-width: 769px) {
-    .mobile-nav-marker ~ div[data-testid="stSelectbox"] { display: none !important; }
+    [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] {
+        display: none !important;
+    }
 }
 /* Full-width navy nav bar on mobile */
 @media (max-width: 768px) {
-    .mobile-nav-marker ~ div[data-testid="stSelectbox"] {
+    [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] {
         position: sticky !important;
         top: 0 !important;
         z-index: 9999 !important;
@@ -598,8 +605,8 @@ st.markdown("""
         padding: 8px 12px !important;
         box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important;
     }
-    .mobile-nav-marker ~ div[data-testid="stSelectbox"] label { display: none !important; }
-    .mobile-nav-marker ~ div[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+    [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] label { display: none !important; }
+    [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] [data-baseweb="select"] > div {
         background: #0A1628 !important;
         border: 2px solid #3B6FD4 !important;
         border-radius: 8px !important;
@@ -607,17 +614,10 @@ st.markdown("""
         font-weight: 800 !important;
         font-size: 15px !important;
         min-height: 44px !important;
-        letter-spacing: 0.01em !important;
     }
-    .mobile-nav-marker ~ div[data-testid="stSelectbox"] [data-baseweb="select"] svg {
-        fill: #ffffff !important;
-    }
-    /* Value text inside the selectbox */
-    .mobile-nav-marker ~ div[data-testid="stSelectbox"] [data-baseweb="select"] [data-testid="stMarkdownContainer"],
-    .mobile-nav-marker ~ div[data-testid="stSelectbox"] [data-baseweb="select"] span,
-    .mobile-nav-marker ~ div[data-testid="stSelectbox"] [data-baseweb="select"] div {
-        color: #ffffff !important;
-    }
+    [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] [data-baseweb="select"] svg { fill: #ffffff !important; }
+    [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] span,
+    [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] div { color: #ffffff !important; }
 }
 </style>
 <div class="mobile-nav-marker"></div>
