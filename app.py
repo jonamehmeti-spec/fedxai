@@ -566,6 +566,7 @@ with st.sidebar:
                             label_visibility="collapsed")
     if sidebar_page != st.session_state["page"]:
         st.session_state["page"] = sidebar_page
+        st.session_state["mobile_nav"] = sidebar_page
         st.rerun()
 
     st.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
@@ -623,15 +624,16 @@ st.markdown("""
 <div class="mobile-nav-marker"></div>
 """, unsafe_allow_html=True)
 
-# Keep the widget state in sync with the canonical page state so the
-# selectbox never overwrites a navigation that happened via the sidebar.
-st.session_state["mobile_nav"] = st.session_state["page"]
-mobile_page = st.selectbox("Navigate", PAGES,
-                           key="mobile_nav",
-                           label_visibility="collapsed")
-if mobile_page != st.session_state["page"]:
-    st.session_state["page"] = mobile_page
-    st.rerun()
+def _on_mobile_nav_change():
+    st.session_state["page"] = st.session_state["mobile_nav"]
+
+if "mobile_nav" not in st.session_state:
+    st.session_state["mobile_nav"] = st.session_state["page"]
+
+st.selectbox("Navigate", PAGES,
+             key="mobile_nav",
+             on_change=_on_mobile_nav_change,
+             label_visibility="collapsed")
 page = st.session_state["page"]
 
 # ── Training Metrics ───────────────────────────────────────────────
