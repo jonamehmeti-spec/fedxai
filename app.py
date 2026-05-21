@@ -29,6 +29,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import joblib
+import shap
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
@@ -41,7 +42,7 @@ CLASS_NAMES = {
     0: "Healthy",
     1: "Diabetes / Prediabetes",
     2: "High Cardiovascular Risk",
-    3: "Hypertension Risk"
+    3: "Cardiometabolic Risk"
 }
 
 CLASS_COLORS = {
@@ -515,6 +516,11 @@ def load_model_and_data():
         return None, None, [], False
 
 
+@st.cache_resource
+def load_shap_explainer(model):
+    return shap.TreeExplainer(model)
+
+
 def load_training_history():
     path = LOGS_DIR / "fl_training_history.json"
     if path.exists():
@@ -878,8 +884,10 @@ elif "Patient Predictor" in page:
                     "AnyHealthcare", "NoDocbcCost",
                 }
 
-                coef = model.coef_[pred_class]
-                sv = coef * X_scaled[0]
+                explainer = load_shap_explainer(model)
+                shap_vals = explainer.shap_values(X_scaled)
+                # shap_vals is list of arrays [n_classes][n_samples, n_features]
+                sv = shap_vals[pred_class][0]
                 # Filter to only user-answered features, sorted by absolute contribution
                 user_idx = [
                     i for i, name in enumerate(feature_names)
