@@ -1,18 +1,16 @@
 """
-run_simulation.py — Run the full federated learning simulation in a single process.
+run_simulation.py — Federated XGBoost simulation (cyclic strategy).
 
-Runs FedAvg across three hospital clients in one process (no Ray required).
-Flower's `start_simulation` needs Ray; this script uses the same client code with
-a local weighted FedAvg loop so `pip install flwr[simulation]` is optional.
+Federated strategy: Cyclic training
+  Each round, hospitals train sequentially. Hospital B starts from Hospital A's
+  model; Hospital C starts from Hospital B's. The final hospital's model becomes
+  the global model for the next round. This accumulates trees from all hospitals
+  without sharing raw data.
 
 Usage:
     python run_simulation.py
-    python run_simulation.py --rounds 10 --dp  (with differential privacy)
-    python run_simulation.py --rounds 3 --no-dp --verbose
-
-After running, check:
-  - logs/fl_training_history.json  → per-round metrics
-  - models/global_model_latest.npy → final global model weights
+    python run_simulation.py --rounds 10
+    python run_simulation.py --rounds 5 --verbose
 """
 
 import warnings
@@ -23,62 +21,29 @@ import json
 from pathlib import Path
 from typing import Dict, List
 
+import joblib
 import numpy as np
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
-from fl_client import HospitalClient
-from flwr.common import NDArrays
+from fl_client import HospitalClient, _is_placeholder, _params_to_model
 
-DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR   = Path(__file__).parent / "data"
 MODELS_DIR = Path(__file__).parent / "models"
-LOGS_DIR = Path(__file__).parent / "logs"
+LOGS_DIR   = Path(__file__).parent / "logs"
 
 HOSPITALS = ["A", "B", "C"]
 
 
-def _save_weight_tuple(path: Path, weights: NDArrays) -> None:
-    """Persist (coef, intercept) as .npy readable by np.load(..., allow_pickle=True)."""
-    arr = np.empty(len(weights), dtype=object)
-    for i, w in enumerate(weights):
-        arr[i] = w
-    np.save(str(path), arr)
-
-
 def check_data_ready() -> bool:
-    for h in HOSPITALS:
-        if not (DATA_DIR / f"hospital_{h}.csv").exists():
-            return False
-    return True
+    return all((DATA_DIR / f"hospital_{h}.csv").exists() for h in HOSPITALS)
 
 
-def _fedavg(weights_list: List[NDArrays], num_examples: List[int]) -> NDArrays:
-    """Sample-weighted average of client weight tuples (coef, intercept)."""
-    total = float(sum(num_examples))
-    return [
-        sum(w[0] * n for w, n in zip(weights_list, num_examples)) / total,
-        sum(w[1] * n for w, n in zip(weights_list, num_examples)) / total,
-    ]
-
-
-def run_simulation(
-    num_rounds: int = 5,
-    use_dp: bool = False,
-    dp_epsilon: float = 1.0,
-):
+def run_simulation(num_rounds: int = 10):
     if not check_data_ready():
         print("""
 ╔══════════════════════════════════════════════════════════════╗
-║  DATA NOT READY                                              ║
-║                                                              ║
-║  Please prepare the dataset first:                           ║
-║  1. Download the CDC BRFSS dataset from Kaggle               ║
-║     https://www.kaggle.com/datasets/alexteboul/              ║
-║     diabetes-health-indicators-dataset                       ║
-║  2. Save as: data/raw_data.csv                               ║
-║  3. Run: python3 prepare_data.py                             ║
-║                                                              ║
-║  Then re-run: python run_simulation.py                       ║
+║  DATA NOT READY — run python3 prepare_data.py first          ║
 ╚══════════════════════════════════════════════════════════════╝
         """)
         return
@@ -86,53 +51,52 @@ def run_simulation(
     print(f"""
 ╔══════════════════════════════════════════════════════════════╗
 ║  FedXAI Simulation Starting                                  ║
+║  Model:     XGBoost (cyclic federated training)              ║
 ║  Hospitals: {len(HOSPITALS)} (A, B, C — simulated locally)           ║
 ║  FL Rounds: {num_rounds:<49} ║
-║  Differential Privacy: {'ON  (ε=' + str(dp_epsilon) + ')' if use_dp else 'OFF':<38} ║
 ╚══════════════════════════════════════════════════════════════╝
     """)
 
     MODELS_DIR.mkdir(exist_ok=True)
     LOGS_DIR.mkdir(exist_ok=True)
 
-    clients = [
-        HospitalClient(
-            hospital_id=h,
-            use_dp=use_dp,
-            dp_epsilon=dp_epsilon,
-            verbose=True,
-        )
-        for h in HOSPITALS
-    ]
+    clients = [HospitalClient(hospital_id=h, verbose=True) for h in HOSPITALS]
+
+    # Start with placeholder (no global model yet)
     global_params = clients[0].get_parameters({})
 
     metrics_history: List[Dict] = []
+
     for rnd in range(1, num_rounds + 1):
         cfg = {"server_round": rnd}
-        weights_list: List[NDArrays] = []
-        nums: List[int] = []
-        for c in clients:
-            w, n, _ = c.fit(global_params, cfg)
-            weights_list.append(w)
-            nums.append(n)
-        global_params = _fedavg(weights_list, nums)
 
-        accs: List[float] = []
-        f1s: List[float] = []
+        # ── Cyclic aggregation ─────────────────────────────────────
+        # Each hospital trains from the previous hospital's model.
+        # No raw data leaves the hospital; only the serialised model travels.
+        for c in clients:
+            global_params, _, _ = c.fit(global_params, cfg)
+
+        # ── Evaluate global model on each hospital's test set ──────
+        accs, f1s = [], []
         for c in clients:
             _loss, _n, ev = c.evaluate(global_params, cfg)
             accs.append(float(ev["accuracy"]))
             f1s.append(float(ev["f1_weighted"]))
 
-        metrics_history.append({
-            "round": rnd,
-            "accuracy": round(sum(accs) / len(accs), 4),
-            "f1_weighted": round(sum(f1s) / len(f1s), 4),
-        })
+        avg_acc = round(sum(accs) / len(accs), 4)
+        avg_f1  = round(sum(f1s)  / len(f1s),  4)
+        metrics_history.append({"round": rnd, "accuracy": avg_acc, "f1_weighted": avg_f1})
 
-        _save_weight_tuple(MODELS_DIR / f"global_model_round{rnd}.npy", global_params)
+        # Save round checkpoint as pkl
+        if not _is_placeholder(global_params):
+            model = _params_to_model(global_params)
+            joblib.dump(model, MODELS_DIR / f"global_model_round{rnd}.pkl")
 
-    _save_weight_tuple(MODELS_DIR / "global_model_latest.npy", global_params)
+    # Save final model
+    if not _is_placeholder(global_params):
+        model = _params_to_model(global_params)
+        joblib.dump(model, MODELS_DIR / "global_model_latest.pkl")
+        print(f"\n  Global model saved → {MODELS_DIR / 'global_model_latest.pkl'}")
 
     history_path = LOGS_DIR / "fl_training_history.json"
     with open(history_path, "w") as f:
@@ -142,35 +106,19 @@ def run_simulation(
     print("\nTraining Summary:")
     print(f"  {'Round':<8} {'Accuracy':<12} {'F1':<12}")
     print(f"  {'-'*32}")
-
     for entry in metrics_history:
-        r = entry.get("round", "?")
-        acc = entry.get("accuracy", entry.get("avg_accuracy", "—"))
-        f1 = entry.get("f1_weighted", entry.get("avg_f1_weighted", "—"))
-        acc_str = f"{acc:.4f}" if isinstance(acc, float) else str(acc)
-        f1_str = f"{f1:.4f}" if isinstance(f1, float) else str(f1)
-        print(f"  {r:<8} {acc_str:<12} {f1_str:<12}")
+        print(f"  {entry['round']:<8} {entry['accuracy']:<12.4f} {entry['f1_weighted']:<12.4f}")
 
     print("\nNext steps:")
-    print("  → Run XAI analysis:       python xai/explain.py")
-    print("  → Launch dashboard:       streamlit run dashboard/app.py")
+    print("  → Launch dashboard:  streamlit run app.py")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run federated learning simulation")
-    parser.add_argument("--rounds", type=int, default=5,
-                        help="Number of FL rounds (default: 5)")
-    parser.add_argument("--dp", action="store_true", default=False,
-                        help="Enable differential privacy")
-    parser.add_argument("--dp-epsilon", type=float, default=1.0,
-                        help="Privacy budget (lower = more private, default: 1.0)")
+    parser = argparse.ArgumentParser(description="Run federated XGBoost simulation")
+    parser.add_argument("--rounds", type=int, default=10,
+                        help="Number of FL rounds (default: 10)")
     args = parser.parse_args()
-
-    run_simulation(
-        num_rounds=args.rounds,
-        use_dp=args.dp,
-        dp_epsilon=args.dp_epsilon,
-    )
+    run_simulation(num_rounds=args.rounds)
 
 
 if __name__ == "__main__":

@@ -35,36 +35,17 @@ XAI_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_global_model():
-    """Load the latest global model weights and reconstruct sklearn model."""
-    from sklearn.linear_model import LogisticRegression
-
-    weights_path = MODELS_DIR / "global_model_latest.npy"
-
-    if not weights_path.exists():
-        # Try loading any round checkpoint
-        checkpoints = sorted(MODELS_DIR.glob("global_model_round*.npy"))
+    """Load the latest global XGBoost model."""
+    model_path = MODELS_DIR / "global_model_latest.pkl"
+    if not model_path.exists():
+        checkpoints = sorted(MODELS_DIR.glob("global_model_round*.pkl"))
         if not checkpoints:
             raise FileNotFoundError(
                 "No global model found. Run the simulation first:\n"
                 "  python run_simulation.py"
             )
-        weights_path = checkpoints[-1]
-
-    weights = np.load(str(weights_path), allow_pickle=True)
-
-    # Load one hospital model as template (has fitted attributes)
-    hospital_models = sorted(MODELS_DIR.glob("hospital_*_round*.pkl"))
-    if hospital_models:
-        model = joblib.load(hospital_models[-1])
-        model.coef_ = weights[0]
-        model.intercept_ = weights[1]
-    else:
-        raise FileNotFoundError(
-            "No local hospital model checkpoints found.\n"
-            "Run the simulation first: python run_simulation.py"
-        )
-
-    return model
+        model_path = checkpoints[-1]
+    return joblib.load(model_path)
 
 
 def load_test_data(hospital_id: str = "A") -> Tuple[np.ndarray, np.ndarray, List[str]]:
@@ -88,13 +69,13 @@ def load_test_data(hospital_id: str = "A") -> Tuple[np.ndarray, np.ndarray, List
 
 
 def compute_shap_values(model, X: np.ndarray, feature_names: List[str]):
-    """Compute SHAP values using LinearExplainer (exact, fast for LogisticRegression)."""
+    """Compute SHAP values using TreeExplainer (exact, fast for XGBoost)."""
     print("Computing SHAP values...")
 
-    explainer = shap.LinearExplainer(model, X, feature_names=feature_names)
+    explainer = shap.TreeExplainer(model)
 
     sample_size = min(200, len(X))
-    X_sample = X[:sample_size]
+    X_sample = X[:sample_size].astype(np.float32)
 
     shap_values = explainer.shap_values(X_sample)
     return explainer, shap_values, X_sample

@@ -3,20 +3,23 @@ Federated Learning Client — simulates a single hospital node.
 
 Each hospital:
 1. Loads its own local data partition (never shared)
-2. Trains a local model on that data
-3. Optionally adds differential privacy noise to model parameters
-4. Sends ONLY model weights to the FL server (never raw data)
-5. Receives the updated global model and evaluates locally
+2. Trains an XGBoost model on that data (or continues from global model)
+3. Serialises the model and sends it to the FL server
+4. Receives the updated global model and evaluates locally
 
-Run via: python clients/fl_client.py --hospital A --server localhost:8080
+Federated strategy: Cyclic training — hospitals train sequentially,
+each starting from the previous hospital's model. This is the standard
+approach for federated tree-based models (cannot average tree structures).
 """
 
-import argparse
+import io
 import warnings
 warnings.filterwarnings("ignore")
 
+import argparse
 from pathlib import Path
 from typing import Dict, List, Tuple
+
 import numpy as np
 import pandas as pd
 import joblib
@@ -24,23 +27,12 @@ import joblib
 import flwr as fl
 from flwr.common import NDArrays, Scalar
 
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import (
-    accuracy_score, f1_score, classification_report, log_loss
-)
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score, f1_score, classification_report, log_loss
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-# Try to import diffprivlib (differential privacy)
-try:
-    from diffprivlib.models import LogisticRegression as DPLogisticRegression
-    DP_AVAILABLE = True
-except ImportError:
-    DP_AVAILABLE = False
-    print("  diffprivlib not installed — running without differential privacy")
-
-DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR   = Path(__file__).parent / "data"
 MODELS_DIR = Path(__file__).parent / "models"
 MODELS_DIR.mkdir(exist_ok=True)
 
@@ -48,213 +40,166 @@ CLASS_NAMES = {
     0: "Healthy",
     1: "Diabetes / Prediabetes",
     2: "High Cardiovascular Risk",
-    3: "Hypertension Risk"
+    3: "Cardiometabolic Risk",
 }
+
+# Trees added per hospital per round (cyclic FL accumulates across rounds)
+TREES_PER_ROUND = 40
 
 
 def load_hospital_data(hospital_id: str) -> Tuple[np.ndarray, np.ndarray, List[str]]:
-    """Load and preprocess data for a specific hospital partition."""
     data_path = DATA_DIR / f"hospital_{hospital_id}.csv"
-
     if not data_path.exists():
-        raise FileNotFoundError(
-            f"Hospital {hospital_id} data not found at {data_path}\n"
-            f"Please run: python data/prepare_data.py"
-        )
+        raise FileNotFoundError(f"Hospital {hospital_id} data not found at {data_path}")
 
     df = pd.read_csv(data_path)
-
-    # Load feature names
     feature_file = DATA_DIR / "features.txt"
-    if feature_file.exists():
-        with open(feature_file) as f:
-            feature_cols = [line.strip() for line in f.readlines()]
-    else:
-        feature_cols = [c for c in df.columns if c != "disease_class"]
+    with open(feature_file) as f:
+        feature_cols = [l.strip() for l in f.readlines()]
 
-    X = df[feature_cols].values.astype(np.float64)
+    X = df[feature_cols].values.astype(np.float32)
     y = df["disease_class"].values.astype(int)
 
-    # Standardize features
     scaler_path = DATA_DIR / "scaler.pkl"
     if scaler_path.exists():
         scaler = joblib.load(scaler_path)
-        X = scaler.transform(X)
-    else:
-        scaler = StandardScaler()
-        X = scaler.fit_transform(X)
+        X = scaler.transform(X).astype(np.float32)
 
     return X, y, feature_cols
 
 
-def get_model_weights(model) -> NDArrays:
-    """Extract model weights as a list of numpy arrays (for Flower)."""
-    if hasattr(model, "coef_"):
-        # LogisticRegression
-        weights = [model.coef_.copy(), model.intercept_.copy()]
-    else:
-        raise ValueError("Unsupported model type for weight extraction")
-    return weights
+def _model_to_params(model: XGBClassifier) -> NDArrays:
+    """Serialise XGBClassifier to bytes → numpy uint8 array for Flower."""
+    buf = io.BytesIO()
+    joblib.dump(model, buf)
+    return [np.frombuffer(buf.getvalue(), dtype=np.uint8)]
 
 
-def set_model_weights(model, weights: NDArrays):
-    """Set model weights from a list of numpy arrays."""
-    if hasattr(model, "coef_"):
-        model.coef_ = weights[0]
-        model.intercept_ = weights[1]
-    return model
+def _params_to_model(params: NDArrays) -> XGBClassifier:
+    """Deserialise numpy uint8 array back to XGBClassifier."""
+    buf = io.BytesIO(params[0].tobytes())
+    return joblib.load(buf)
+
+
+def _is_placeholder(params: NDArrays) -> bool:
+    return len(params[0]) == 1 and params[0][0] == 0
+
+
+def _make_model() -> XGBClassifier:
+    return XGBClassifier(
+        n_estimators=TREES_PER_ROUND,
+        max_depth=6,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        min_child_weight=5,
+        gamma=0.1,
+        objective="multi:softprob",
+        num_class=4,
+        eval_metric="mlogloss",
+        use_label_encoder=False,
+        random_state=42,
+        n_jobs=-1,
+        verbosity=0,
+    )
 
 
 class HospitalClient(fl.client.NumPyClient):
-    """
-    Flower client representing a single hospital.
-    Trains locally, shares only model weights (+ optional DP noise).
-    """
-
-    def __init__(
-        self,
-        hospital_id: str,
-        use_dp: bool = False,
-        dp_epsilon: float = 1.0,
-        verbose: bool = True
-    ):
+    def __init__(self, hospital_id: str, use_dp: bool = False,
+                 dp_epsilon: float = 1.0, verbose: bool = True):
         self.hospital_id = hospital_id
-        self.use_dp = use_dp and DP_AVAILABLE
-        self.dp_epsilon = dp_epsilon
         self.verbose = verbose
 
         print(f"\n[Hospital {hospital_id}] Loading data...")
         self.X, self.y, self.feature_names = load_hospital_data(hospital_id)
 
-        # 80/20 stratified train-test split (shuffle to avoid class ordering bias)
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             self.X, self.y, test_size=0.2, random_state=42, stratify=self.y
         )
 
         n_classes = len(np.unique(self.y))
-        print(f"[Hospital {hospital_id}] {len(self.X_train):,} train / {len(self.X_test):,} test samples")
-        print(f"[Hospital {hospital_id}] {n_classes} disease classes, {len(self.feature_names)} features")
+        print(f"[Hospital {hospital_id}] {len(self.X_train):,} train / "
+              f"{len(self.X_test):,} test samples")
+        print(f"[Hospital {hospital_id}] {n_classes} disease classes, "
+              f"{len(self.feature_names)} features")
 
-        # Initialize model
-        if self.use_dp:
-            self.model = DPLogisticRegression(
-                epsilon=dp_epsilon,
-                max_iter=100,
-                solver="lbfgs",
-                multi_class="multinomial"
-            )
-            print(f"[Hospital {hospital_id}] Using Differential Privacy (ε={dp_epsilon})")
-        else:
-            self.model = LogisticRegression(
-                max_iter=500,
-                solver="lbfgs",
-                multi_class="multinomial",
-                C=1.0,
-                class_weight="balanced",
-                random_state=42
-            )
+        self.model = _make_model()
+        self._fitted = False
 
     def get_parameters(self, config: Dict) -> NDArrays:
-        """Called by Flower to get current model parameters."""
-        try:
-            return get_model_weights(self.model)
-        except Exception:
-            # Model not yet fitted — return zeros
-            n_features = self.X_train.shape[1]
-            n_classes = len(np.unique(self.y_train))
-            return [
-                np.zeros((n_classes, n_features)),
-                np.zeros(n_classes)
-            ]
+        if not self._fitted:
+            return [np.array([0], dtype=np.uint8)]  # placeholder
+        return _model_to_params(self.model)
 
     def fit(self, parameters: NDArrays, config: Dict) -> Tuple[NDArrays, int, Dict]:
-        """
-        Called by FL server to train locally.
-        Sets global parameters → trains locally → returns updated weights.
-        """
         round_num = config.get("server_round", 1)
-
-        # Load global model weights from server
-        try:
-            self.model = set_model_weights(self.model, parameters)
-            # Warm-start: signal model is partially fitted
-            self.model.warm_start = True
-        except Exception:
-            pass
-
-        # LOCAL TRAINING — raw data never leaves this function
         if self.verbose:
             print(f"\n[Hospital {self.hospital_id}] Round {round_num} — training locally...")
 
-        self.model.fit(self.X_train, self.y_train)
+        if _is_placeholder(parameters):
+            # First round — train from scratch
+            self.model = _make_model()
+            self.model.fit(self.X_train, self.y_train)
+        else:
+            # Continue training from the incoming global model (cyclic FL)
+            global_model = _params_to_model(parameters)
+            self.model = _make_model()
+            self.model.fit(
+                self.X_train, self.y_train,
+                xgb_model=global_model.get_booster()
+            )
+
+        self._fitted = True
 
         train_preds = self.model.predict(self.X_train)
         train_acc = accuracy_score(self.y_train, train_preds)
-        train_f1 = f1_score(self.y_train, train_preds, average="weighted", zero_division=0)
+        train_f1  = f1_score(self.y_train, train_preds, average="weighted", zero_division=0)
 
         if self.verbose:
             print(f"[Hospital {self.hospital_id}] Local accuracy: {train_acc:.4f} | F1: {train_f1:.4f}")
 
-        # Save local model checkpoint
         model_path = MODELS_DIR / f"hospital_{self.hospital_id}_round{round_num}.pkl"
         joblib.dump(self.model, model_path)
 
         return (
-            get_model_weights(self.model),
+            _model_to_params(self.model),
             len(self.X_train),
-            {"train_accuracy": float(train_acc), "train_f1": float(train_f1)}
+            {"train_accuracy": float(train_acc), "train_f1": float(train_f1)},
         )
 
     def evaluate(self, parameters: NDArrays, config: Dict) -> Tuple[float, int, Dict]:
-        """
-        Called by FL server to evaluate the global model on local test data.
-        """
-        self.model = set_model_weights(self.model, parameters)
+        if _is_placeholder(parameters):
+            return 1.0, len(self.X_test), {"accuracy": 0.0, "f1_weighted": 0.0}
+
+        self.model = _params_to_model(parameters)
+        self._fitted = True
 
         preds = self.model.predict(self.X_test)
         proba = self.model.predict_proba(self.X_test)
-        acc = accuracy_score(self.y_test, preds)
-        f1 = f1_score(self.y_test, preds, average="weighted", zero_division=0)
+        acc  = accuracy_score(self.y_test, preds)
+        f1   = f1_score(self.y_test, preds, average="weighted", zero_division=0)
         loss = log_loss(self.y_test, proba)
 
         if self.verbose:
-            print(f"\n[Hospital {self.hospital_id}] EVALUATION — Accuracy: {acc:.4f} | F1: {f1:.4f}")
+            print(f"\n[Hospital {self.hospital_id}] EVALUATION — "
+                  f"Accuracy: {acc:.4f} | F1: {f1:.4f}")
             print(classification_report(
                 self.y_test, preds,
                 target_names=list(CLASS_NAMES.values()),
                 zero_division=0
             ))
 
-        return (
-            float(loss),
-            len(self.X_test),
-            {"accuracy": float(acc), "f1_weighted": float(f1)}
-        )
+        return float(loss), len(self.X_test), {"accuracy": float(acc), "f1_weighted": float(f1)}
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Start a hospital FL client")
-    parser.add_argument("--hospital", type=str, default="A", choices=["A", "B", "C"],
-                        help="Hospital identifier (A, B, or C)")
-    parser.add_argument("--server", type=str, default="localhost:8080",
-                        help="FL server address")
-    parser.add_argument("--dp", action="store_true",
-                        help="Enable differential privacy")
-    parser.add_argument("--dp-epsilon", type=float, default=1.0,
-                        help="Differential privacy epsilon (lower = more private)")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--hospital", type=str, default="A", choices=["A", "B", "C"])
+    parser.add_argument("--server", type=str, default="localhost:8080")
     args = parser.parse_args()
 
-    client = HospitalClient(
-        hospital_id=args.hospital,
-        use_dp=args.dp,
-        dp_epsilon=args.dp_epsilon
-    )
-
-    print(f"\n[Hospital {args.hospital}] Connecting to FL server at {args.server}...")
-    fl.client.start_numpy_client(
-        server_address=args.server,
-        client=client
-    )
+    client = HospitalClient(hospital_id=args.hospital)
+    fl.client.start_numpy_client(server_address=args.server, client=client)
 
 
 if __name__ == "__main__":

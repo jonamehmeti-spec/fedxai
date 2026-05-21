@@ -1,102 +1,52 @@
 [
   {
     "round": 1,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
+    "accuracy": 0.9002,
+    "f1_weighted": 0.8701
   },
   {
     "round": 2,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
+    "accuracy": 0.8994,
+    "f1_weighted": 0.8703
   },
   {
     "round": 3,
-    "accuracy": 0.8233,
-    "f1_weighted": 0.8402
+    "accuracy": 0.8995,
+    "f1_weighted": 0.8711
   },
   {
     "round": 4,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
+    "accuracy": 0.8989,
+    "f1_weighted": 0.8712
   },
   {
     "round": 5,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
+    "accuracy": 0.8983,
+    "f1_weighted": 0.8711
   },
   {
     "round": 6,
-    "accuracy": 0.8233,
-    "f1_weighted": 0.8402
+    "accuracy": 0.8978,
+    "f1_weighted": 0.8713
   },
   {
     "round": 7,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
+    "accuracy": 0.8968,
+    "f1_weighted": 0.8707
   },
   {
     "round": 8,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
+    "accuracy": 0.8969,
+    "f1_weighted": 0.8714
   },
   {
     "round": 9,
-    "accuracy": 0.8233,
-    "f1_weighted": 0.8402
+    "accuracy": 0.8962,
+    "f1_weighted": 0.871
   },
   {
     "round": 10,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
-  },
-  {
-    "round": 11,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
-  },
-  {
-    "round": 12,
-    "accuracy": 0.8233,
-    "f1_weighted": 0.8402
-  },
-  {
-    "round": 13,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
-  },
-  {
-    "round": 14,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
-  },
-  {
-    "round": 15,
-    "accuracy": 0.8233,
-    "f1_weighted": 0.8402
-  },
-  {
-    "round": 16,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
-  },
-  {
-    "round": 17,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
-  },
-  {
-    "round": 18,
-    "accuracy": 0.8233,
-    "f1_weighted": 0.8402
-  },
-  {
-    "round": 19,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
-  },
-  {
-    "round": 20,
-    "accuracy": 0.8234,
-    "f1_weighted": 0.8403
+    "accuracy": 0.8952,
+    "f1_weighted": 0.8703
   }
 ]

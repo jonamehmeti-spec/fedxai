@@ -509,11 +509,7 @@ def load_model_and_data():
         with open(DATA_DIR / "features.txt") as f:
             feature_names = [l.strip() for l in f.readlines()]
         scaler = joblib.load(DATA_DIR / "scaler.pkl")
-        weights = np.load(str(MODELS_DIR / "global_model_latest.npy"), allow_pickle=True)
-        hospital_models = sorted(MODELS_DIR.glob("hospital_*_round*.pkl"))
-        model = joblib.load(hospital_models[-1])
-        model.coef_ = weights[0]
-        model.intercept_ = weights[1]
+        model = joblib.load(MODELS_DIR / "global_model_latest.pkl")
         return model, scaler, feature_names, True
     except Exception:
         return None, None, [], False
@@ -528,8 +524,8 @@ def load_training_history():
 
 
 def predict_patient(model, scaler, feature_names, patient_values):
-    X = np.array([[patient_values.get(f, 0) for f in feature_names]])
-    X_scaled = scaler.transform(X)
+    X = np.array([[patient_values.get(f, 0) for f in feature_names]], dtype=np.float32)
+    X_scaled = scaler.transform(X).astype(np.float32)
     proba = model.predict_proba(X_scaled)[0]
     pred_class = int(np.argmax(proba))
     return pred_class, proba, X_scaled

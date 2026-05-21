@@ -4,3 +4,9 @@ logs/xai_outputs/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Model checkpoints (keep only the final global model)
+models/global_model_round*.pkl
+models/global_model_round*.npy
+models/global_model_latest.npy
+models/hospital_*.pkl
