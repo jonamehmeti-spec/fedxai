@@ -578,6 +578,36 @@ with st.sidebar:
 
 model, scaler, feature_names, model_ready, shap_explainer = load_model_and_data()
 
+# ── Mobile sidebar trigger button ──────────────────────────────────
+st.markdown("""
+<style>
+#mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 9999999;
+    background: #0A1628;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    line-height: 40px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+@media (max-width: 768px) {
+    #mobile-menu-btn { display: block; }
+}
+</style>
+<button id="mobile-menu-btn" onclick="
+    var btn = window.parent.document.querySelector('[data-testid=stSidebarCollapsedControl] button, [data-testid=collapsedControl] button, button[aria-label=\\'Open sidebar\\'], button[aria-label=\\'Close sidebar\\']');
+    if (btn) btn.click();
+">&#9776;</button>
+""", unsafe_allow_html=True)
 
 # ── Training Metrics ───────────────────────────────────────────────
 if "Training Metrics" in page:
