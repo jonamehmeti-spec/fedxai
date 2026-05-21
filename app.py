@@ -34,6 +34,9 @@ import shap
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
+if 'sidebar_visible' not in st.session_state:
+    st.session_state['sidebar_visible'] = True
+
 DATA_DIR = ROOT / "data"
 MODELS_DIR = ROOT / "models"
 LOGS_DIR = ROOT / "logs"
@@ -118,20 +121,10 @@ html, body, [class*="css"] {
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding-top: 2rem; padding-bottom: 2rem; }
 
-/* ── Sidebar ─────────────────────────────────────────────────────── */
+/* ── Sidebar ──────────────────────────────────────────────────── */
 [data-testid="stSidebar"] {
-    background: #0A1628 !important;
+    background: #0A1628;
     border-right: 1px solid #1E2D45;
-    /* Prevent Streamlit from ever collapsing the sidebar off-screen */
-    margin-left: 0 !important;
-    transform: none !important;
-    min-width: 244px !important;
-    visibility: visible !important;
-}
-/* Always show the reopen arrow in case user collapses manually */
-[data-testid="stSidebarCollapsedControl"] {
-    display: flex !important;
-    visibility: visible !important;
 }
 [data-testid="stSidebar"] * { color: #C8D6E8 !important; }
 [data-testid="stSidebar"] .stRadio label {
@@ -628,24 +621,54 @@ def append_patient_record(patient_values: dict, pred_class: int, hospital_id: st
 PAGES = ["Training Metrics", "Patient Predictor", "Privacy Dashboard", "System Info"]
 if "page" not in st.session_state:
     st.session_state["page"] = "Training Metrics"
+if "current_page" not in st.session_state:
+    st.session_state["current_page"] = "Training Metrics"
+
+# ── Collapsed sidebar width ────────────────────────────────────────
+if not st.session_state['sidebar_visible']:
+    st.markdown('''
+    <style>
+    [data-testid="stSidebar"] {
+        min-width: 60px !important;
+        max-width: 60px !important;
+        width: 60px !important;
+    }
+    [data-testid="stSidebar"] > div {
+        padding: 1rem 0.3rem !important;
+    }
+    </style>
+    ''', unsafe_allow_html=True)
 
 # ── Sidebar ────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown('## FedXAI')
-    st.markdown('Federated & Explainable AI for Chronic Disease Prediction')
-    st.markdown('---')
-    page = st.radio('Navigate', [
-        'Training Metrics',
-        'Patient Predictor',
-        'Privacy Dashboard',
-        'System Info'
-    ], key='page', label_visibility='collapsed')
-    st.markdown('---')
-    st.markdown('''
-    <span class='privacy-badge'>🔒 No raw data shared</span><br>
-    <span class='privacy-badge'>✓ FedAvg aggregation</span><br>
-    <span class='privacy-badge'>✓ XAI + Deep Diagnosis</span>
-    ''', unsafe_allow_html=True)
+    if st.session_state['sidebar_visible']:
+        st.markdown('## FedXAI')
+        st.markdown('Federated & Explainable AI for Chronic Disease Prediction')
+        st.markdown('---')
+        selected = st.radio('Navigate', [
+            'Training Metrics',
+            'Patient Predictor',
+            'Privacy Dashboard',
+            'System Info'
+        ], index=PAGES.index(st.session_state['current_page']),
+           label_visibility='collapsed')
+        st.session_state['current_page'] = selected
+        st.markdown('---')
+        st.markdown('''
+        <span class='privacy-badge'>🔒 No raw data shared</span><br>
+        <span class='privacy-badge'>✓ FedAvg aggregation</span><br>
+        <span class='privacy-badge'>✓ XAI + Deep Diagnosis</span>
+        ''', unsafe_allow_html=True)
+        st.markdown('<br>', unsafe_allow_html=True)
+        if st.button('◀ Hide', key='sidebar_hide_btn', use_container_width=True):
+            st.session_state['sidebar_visible'] = False
+            st.rerun()
+    else:
+        if st.button('▶', key='sidebar_show_btn', use_container_width=True):
+            st.session_state['sidebar_visible'] = True
+            st.rerun()
+
+page = st.session_state['current_page']
 
 model, scaler, feature_names, model_ready, shap_explainer = load_model_and_data()
 
