@@ -594,31 +594,21 @@ st.markdown("""
         display: none !important;
     }
 }
-/* Full-width navy nav bar on mobile */
+/* Mobile nav — style only the inner button, not the container box */
 @media (max-width: 768px) {
-    [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 9999 !important;
-        background: #0A1628 !important;
-        border-radius: 0 !important;
-        margin: -0.75rem -0.75rem 0.75rem -0.75rem !important;
-        padding: 8px 12px !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important;
-    }
     [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] label { display: none !important; }
     [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] [data-baseweb="select"] > div {
         background: #0A1628 !important;
         border: 2px solid #3B6FD4 !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         color: #ffffff !important;
-        font-weight: 800 !important;
-        font-size: 15px !important;
-        min-height: 44px !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        min-height: 42px !important;
+        box-shadow: 0 2px 8px rgba(10,22,40,0.18) !important;
     }
     [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] [data-baseweb="select"] svg { fill: #ffffff !important; }
-    [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] span,
-    [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] div { color: #ffffff !important; }
+    [data-testid="stElementContainer"]:has(.mobile-nav-marker) + [data-testid="stElementContainer"] [data-baseweb="select"] span { color: #ffffff !important; }
 }
 </style>
 <div class="mobile-nav-marker"></div>
