@@ -395,13 +395,6 @@ html, body, [class*="css"] {
 /* ── Mobile ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
 
-    /* ── Hide sidebar entirely on mobile ── */
-    [data-testid="stSidebar"],
-    [data-testid="stSidebarCollapsedControl"],
-    [data-testid="collapsedControl"] {
-        display: none !important;
-    }
-
     /* ── Main content ── */
     .block-container {
         padding-top: 0.5rem !important;
@@ -492,16 +485,6 @@ html, body, [class*="css"] {
     .js-plotly-plot { width: 100% !important; }
 }
 
-
-/* ── Ensure sidebar always visible on desktop ────────────────────── */
-@media (min-width: 769px) {
-    [data-testid="stSidebar"] {
-        display: flex !important;
-        visibility: visible !important;
-        width: var(--sidebar-width, 16rem) !important;
-        min-width: 16rem !important;
-    }
-}
 
 /* ── Desktop-only: sticky input panel, free-scrolling results ───── */
 @media (min-width: 769px) {
@@ -631,12 +614,9 @@ if "page" not in st.session_state:
 
 # ── Sidebar ────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("<div class='sidebar-logo'>FedXAI</div>", unsafe_allow_html=True)
-    st.markdown(
-        "<div class='sidebar-sub'>Federated & Explainable AI<br>for Chronic Disease Prediction</div>",
-        unsafe_allow_html=True
-    )
-    st.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
+    st.markdown("## FedXAI")
+    st.markdown("Federated & Explainable AI for Chronic Disease Prediction")
+    st.markdown("---")
 
     sidebar_page = st.radio("Navigate", PAGES,
                             index=PAGES.index(st.session_state["page"]),
@@ -646,12 +626,10 @@ with st.sidebar:
         st.session_state["mobile_nav"] = sidebar_page
         st.rerun()
 
-    st.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
-    st.markdown("""
-    <div class='sidebar-badge'><div class='sidebar-dot'></div>No raw data shared</div>
-    <div class='sidebar-badge'><div class='sidebar-dot'></div>FedAvg aggregation</div>
-    <div class='sidebar-badge'><div class='sidebar-dot'></div>SHAP + LLM explanations</div>
-    """, unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("No raw data shared")
+    st.markdown("FedAvg aggregation")
+    st.markdown("SHAP + LLM explanations")
 
 page = st.session_state["page"]
 
