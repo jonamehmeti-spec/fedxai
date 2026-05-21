@@ -1147,89 +1147,66 @@ elif "Patient Predictor" in page:
                     unsafe_allow_html=True
                 )
 
-        if st.session_state.get("prediction_done"):
-            st.markdown("<hr class='deep-divider'>", unsafe_allow_html=True)
-            st.markdown("<div class='deep-header'>Full Diagnostic Pipeline</div>", unsafe_allow_html=True)
-            st.markdown(
-                "<div class='deep-sub'>Screen for rare and underdiagnosed conditions that may "
-                "mimic this presentation.</div>",
-                unsafe_allow_html=True
-            )
-            if st.button("Run Full Diagnostic Pipeline", use_container_width=True, type="primary"):
-                st.session_state["deep_mode"] = True
-
-        if st.session_state.get("deep_mode"):
-            from deep_diagnosis import render_deep_diagnosis
-            render_deep_diagnosis(
-                stage1_proba=st.session_state["stage1_proba"],
-                patient_values=st.session_state["patient_values"],
-                stage1_label=st.session_state["stage1_label"],
-                stage1_confidence=st.session_state["stage1_confidence"],
-                patient_sex=st.session_state.get("patient_sex", "other"),
-            )
-
-        # ── Incremental Training — Append to Hospital Dataset ─────
-        if st.session_state.get("prediction_done"):
-            st.markdown("---")
-            st.markdown(f"""
-            <div style='margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid #E8EDF4'>
-                <div style='display:inline-flex; align-items:center; gap:7px; font-size:10px;
-                            font-weight:800; letter-spacing:0.13em; text-transform:uppercase;
-                            color:#3B6FD4; background:#EEF3FB; padding:4px 12px;
-                            border-radius:20px; margin-bottom:10px'>
-                    Incremental Training
-                </div>
-                <div style='font-size:22px; font-weight:800; letter-spacing:-0.5px;
-                            background:linear-gradient(120deg,#0A1628 60%,#3B6FD4);
-                            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-                            background-clip:text'>
-                    Save Patient Record
-                </div>
-                <div style='font-size:13px; color:#64748B; margin-top:4px'>
-                    Append this patient to a hospital partition. The expanded dataset will be used
-                    the next time the federated learning simulation runs.
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            save_col, hosp_col, status_col = st.columns([1, 1, 2])
-
-            with hosp_col:
-                hospital_choice = st.selectbox(
-                    "Hospital partition",
-                    ["A", "B", "C"],
-                    help="Which hospital's local dataset to append this record to.",
+                # ── Full Diagnostic Pipeline ───────────────────────
+                st.markdown("<div class='result-section-label' style='margin-top:20px'>Full Diagnostic Pipeline</div>",
+                            unsafe_allow_html=True)
+                st.markdown(
+                    "<div style='font-size:12px; color:#64748B; margin-bottom:8px'>Screen for rare and "
+                    "underdiagnosed conditions that may mimic this presentation.</div>",
+                    unsafe_allow_html=True
                 )
+                if st.button("Run Full Diagnostic Pipeline", use_container_width=True, type="primary"):
+                    st.session_state["deep_mode"] = True
 
-            with save_col:
-                st.markdown("<br>", unsafe_allow_html=True)
-                save_btn = st.button("Save to Dataset", type="primary", use_container_width=True)
-
-            if save_btn:
-                try:
-                    new_count = append_patient_record(
+                if st.session_state.get("deep_mode"):
+                    from deep_diagnosis import render_deep_diagnosis
+                    render_deep_diagnosis(
+                        stage1_proba=st.session_state["stage1_proba"],
                         patient_values=st.session_state["patient_values"],
-                        pred_class=st.session_state["_pred_class"],
-                        hospital_id=hospital_choice,
-                        feature_names=feature_names,
+                        stage1_label=st.session_state["stage1_label"],
+                        stage1_confidence=st.session_state["stage1_confidence"],
+                        patient_sex=st.session_state.get("patient_sex", "other"),
                     )
-                    st.session_state["_save_msg"] = ("ok", hospital_choice, new_count)
-                except Exception as e:
-                    st.session_state["_save_msg"] = ("err", str(e), 0)
 
-            if "_save_msg" in st.session_state:
-                kind, arg1, arg2 = st.session_state["_save_msg"]
-                if kind == "ok":
-                    with status_col:
-                        st.markdown("<br>", unsafe_allow_html=True)
-                        st.success(
-                            f"Record saved to Hospital {arg1}. "
-                            f"Partition now contains {arg2:,} rows. "
-                            f"Re-run `python run_simulation.py` to retrain on the expanded dataset."
+                # ── Save Patient Record ────────────────────────────
+                st.markdown("<div class='result-section-label' style='margin-top:20px'>Save Record</div>",
+                            unsafe_allow_html=True)
+                st.markdown("""
+                <div style='font-size:12px; color:#64748B; margin-bottom:8px'>
+                    Append this patient to a hospital partition for future federated training.
+                </div>
+                """, unsafe_allow_html=True)
+
+                save_col, hosp_col = st.columns([1, 1])
+                with hosp_col:
+                    hospital_choice = st.selectbox(
+                        "Hospital partition", ["A", "B", "C"],
+                        help="Which hospital's local dataset to append this record to.",
+                    )
+                with save_col:
+                    st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+                    save_btn = st.button("Save to Dataset", type="primary", use_container_width=True)
+
+                if save_btn:
+                    try:
+                        new_count = append_patient_record(
+                            patient_values=st.session_state["patient_values"],
+                            pred_class=st.session_state["_pred_class"],
+                            hospital_id=hospital_choice,
+                            feature_names=feature_names,
                         )
-                else:
-                    with status_col:
-                        st.markdown("<br>", unsafe_allow_html=True)
+                        st.session_state["_save_msg"] = ("ok", hospital_choice, new_count)
+                    except Exception as e:
+                        st.session_state["_save_msg"] = ("err", str(e), 0)
+
+                if "_save_msg" in st.session_state:
+                    kind, arg1, arg2 = st.session_state["_save_msg"]
+                    if kind == "ok":
+                        st.success(
+                            f"Saved to Hospital {arg1} — {arg2:,} rows total. "
+                            f"Re-run `python run_simulation.py` to retrain."
+                        )
+                    else:
                         st.error(f"Save failed: {arg1}")
 
 
