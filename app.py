@@ -493,8 +493,14 @@ html, body, [class*="css"] {
 }
 
 
-@media (max-width: 768px) {
-    .sidebar-toggle-wrap { display: none !important; }
+/* ── Ensure sidebar always visible on desktop ────────────────────── */
+@media (min-width: 769px) {
+    [data-testid="stSidebar"] {
+        display: flex !important;
+        visibility: visible !important;
+        width: var(--sidebar-width, 16rem) !important;
+        min-width: 16rem !important;
+    }
 }
 
 /* ── Desktop-only: sticky input panel, free-scrolling results ───── */
