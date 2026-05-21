@@ -165,6 +165,13 @@ html, body, [class*="css"] {
     background: #1D9E75;
     flex-shrink: 0;
 }
+.privacy-badge {
+    display: inline-block;
+    font-size: 12px;
+    color: #90AACB;
+    padding: 2px 0;
+    line-height: 1.8;
+}
 
 /* ── Page title ───────────────────────────────────────────────── */
 .page-header {
@@ -608,30 +615,27 @@ def append_patient_record(patient_values: dict, pred_class: int, hospital_id: st
 
 
 # ── Navigation state ───────────────────────────────────────────────
-PAGES = ["Training Metrics", "Patient Predictor", "Privacy", "System Info"]
+PAGES = ["Training Metrics", "Patient Predictor", "Privacy Dashboard", "System Info"]
 if "page" not in st.session_state:
     st.session_state["page"] = "Training Metrics"
 
 # ── Sidebar ────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## FedXAI")
-    st.markdown("Federated & Explainable AI for Chronic Disease Prediction")
-    st.markdown("---")
-
-    sidebar_page = st.radio("Navigate", PAGES,
-                            index=PAGES.index(st.session_state["page"]),
-                            label_visibility="collapsed")
-    if sidebar_page != st.session_state["page"]:
-        st.session_state["page"] = sidebar_page
-        st.session_state["mobile_nav"] = sidebar_page
-        st.rerun()
-
-    st.markdown("---")
-    st.markdown("No raw data shared")
-    st.markdown("FedAvg aggregation")
-    st.markdown("SHAP + LLM explanations")
-
-page = st.session_state["page"]
+    st.markdown('## FedXAI')
+    st.markdown('Federated & Explainable AI for Chronic Disease Prediction')
+    st.markdown('---')
+    page = st.radio('Navigate', [
+        'Training Metrics',
+        'Patient Predictor',
+        'Privacy Dashboard',
+        'System Info'
+    ], key='page', label_visibility='collapsed')
+    st.markdown('---')
+    st.markdown('''
+    <span class='privacy-badge'>🔒 No raw data shared</span><br>
+    <span class='privacy-badge'>✓ FedAvg aggregation</span><br>
+    <span class='privacy-badge'>✓ XAI + Deep Diagnosis</span>
+    ''', unsafe_allow_html=True)
 
 model, scaler, feature_names, model_ready, shap_explainer = load_model_and_data()
 
