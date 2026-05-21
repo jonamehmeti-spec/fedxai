@@ -114,19 +114,25 @@ html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 
-/* hide default streamlit chrome — keep header VISIBLE so sidebar toggle works */
-#MainMenu, footer { visibility: hidden; }
-[data-testid="stToolbar"] { visibility: hidden; }
+/* hide default streamlit chrome */
+#MainMenu, footer, header { visibility: hidden; }
 .block-container { padding-top: 2rem; padding-bottom: 2rem; }
 
-/* ── Sidebar — always expanded on desktop ──────────────────────── */
+/* ── Sidebar ─────────────────────────────────────────────────────── */
 [data-testid="stSidebar"] {
-    background: #0A1628;
+    background: #0A1628 !important;
     border-right: 1px solid #1E2D45;
-    display: block !important;
+    /* Prevent Streamlit from ever collapsing the sidebar off-screen */
+    margin-left: 0 !important;
+    transform: none !important;
+    min-width: 244px !important;
+    visibility: visible !important;
 }
-/* Keep sidebar collapse/expand control always clickable */
-[data-testid="stSidebarCollapsedControl"] { display: flex !important; }
+/* Always show the reopen arrow in case user collapses manually */
+[data-testid="stSidebarCollapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+}
 [data-testid="stSidebar"] * { color: #C8D6E8 !important; }
 [data-testid="stSidebar"] .stRadio label {
     font-size: 14px;
