@@ -492,31 +492,6 @@ html, body, [class*="css"] {
     .js-plotly-plot { width: 100% !important; }
 }
 
-/* ── Sidebar toggle button — hide on mobile, style on desktop ────── */
-@media (max-width: 768px) {
-    [data-testid="stElementContainer"]:has(.desktop-toggle-marker) + [data-testid="stElementContainer"] {
-        display: none !important;
-    }
-}
-@media (min-width: 769px) {
-    [data-testid="stElementContainer"]:has(.desktop-toggle-marker) + [data-testid="stElementContainer"] button {
-        background: transparent !important;
-        border: 1px solid #CBD5E1 !important;
-        color: #64748B !important;
-        font-size: 11px !important;
-        padding: 3px 12px !important;
-        border-radius: 6px !important;
-        font-weight: 600 !important;
-        letter-spacing: 0.04em !important;
-        min-height: unset !important;
-        height: 28px !important;
-    }
-    [data-testid="stElementContainer"]:has(.desktop-toggle-marker) + [data-testid="stElementContainer"] button:hover {
-        border-color: #0A1628 !important;
-        color: #0A1628 !important;
-        background: #F1F5F9 !important;
-    }
-}
 
 @media (max-width: 768px) {
     .sidebar-toggle-wrap { display: none !important; }
@@ -722,32 +697,38 @@ st.selectbox("Navigate", PAGES,
              label_visibility="collapsed")
 page = st.session_state["page"]
 
-# ── Desktop sidebar toggle ──────────────────────────────────────────
-if "sidebar_open" not in st.session_state:
-    st.session_state["sidebar_open"] = True
-
-# Inject hide CSS only when closed; sidebar is visible by default
-if not st.session_state["sidebar_open"]:
-    st.markdown("""
-    <style>
-    @media (min-width: 769px) {
-        [data-testid="stSidebar"],
-        [data-testid="stSidebarCollapsedControl"] {
-            display: none !important;
-            width: 0 !important;
-            min-width: 0 !important;
-        }
-        section[data-testid="stMain"] { margin-left: 0 !important; }
-        .block-container { padding-left: 2rem !important; max-width: 100% !important; }
-    }
-    </style>""", unsafe_allow_html=True)
-
-# Marker so we can hide this button on mobile via :has() CSS
-st.markdown('<div class="desktop-toggle-marker"></div>', unsafe_allow_html=True)
-toggle_label = "Hide menu" if st.session_state["sidebar_open"] else "Show menu"
-if st.button(toggle_label, key="sidebar_toggle"):
-    st.session_state["sidebar_open"] = not st.session_state["sidebar_open"]
-    st.rerun()
+# ── Desktop sidebar toggle — pure JS, no rerun needed ──────────────
+st.markdown("""
+<style>
+#menu-toggle-btn {
+    background: transparent;
+    border: 1px solid #CBD5E1;
+    color: #64748B;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    font-family: Inter, sans-serif;
+    margin-bottom: 8px;
+    transition: all 0.15s ease;
+}
+#menu-toggle-btn:hover {
+    border-color: #0A1628;
+    color: #0A1628;
+    background: #F1F5F9;
+}
+@media (max-width: 768px) { #menu-toggle-btn { display: none !important; } }
+</style>
+<button id="menu-toggle-btn" onclick="
+  var closeBtn = document.querySelector('[data-testid=stSidebar] button[data-testid=stBaseButton-header]');
+  var openBtn  = document.querySelector('[data-testid=stSidebarCollapsedControl] button');
+  var me = document.getElementById('menu-toggle-btn');
+  if (closeBtn) { closeBtn.click(); me.textContent = 'Show menu'; }
+  else if (openBtn) { openBtn.click(); me.textContent = 'Hide menu'; }
+">Hide menu</button>
+""", unsafe_allow_html=True)
 
 # ── Training Metrics ───────────────────────────────────────────────
 if "Training Metrics" in page:
