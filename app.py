@@ -395,74 +395,29 @@ html, body, [class*="css"] {
 /* ── Mobile ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
 
-    /* ── Sidebar: full-height navy drawer from left ── */
+    /* ── Sidebar: full-height navy drawer ── */
     [data-testid="stSidebar"] {
         position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
+        top: 0 !important; left: 0 !important;
         height: 100dvh !important;
         z-index: 1000 !important;
         box-shadow: 4px 0 24px rgba(0,0,0,0.35) !important;
-        min-width: 280px !important;
-        max-width: 280px !important;
-        width: 280px !important;
+        min-width: 280px !important; max-width: 280px !important; width: 280px !important;
     }
-    [data-testid="stSidebar"] > div:first-child {
-        height: 100% !important;
-        padding-top: 20px !important;
-    }
+    [data-testid="stSidebar"] > div:first-child { height: 100% !important; padding-top: 20px !important; }
+    [data-testid="stSidebar"] .stRadio label { font-size: 15px !important; padding: 10px 4px !important; display: block !important; }
+    [data-testid="stSidebar"] .stRadio > div { gap: 0 !important; }
 
-    /* Sidebar nav items — larger tap targets */
-    [data-testid="stSidebar"] .stRadio label {
-        font-size: 15px !important;
-        padding: 10px 4px !important;
-        display: block !important;
-    }
-    [data-testid="stSidebar"] .stRadio > div {
-        gap: 0 !important;
-    }
-
-    /* Sidebar toggle button — teal pill on left edge (covers both testid variants) */
-    [data-testid="stSidebarCollapsedControl"],
-    [data-testid="collapsedControl"] {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        background: #0D9488 !important;
-        border-radius: 0 10px 10px 0 !important;
-        width: 36px !important;
-        min-height: 56px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        box-shadow: 3px 0 12px rgba(0,0,0,0.25) !important;
-        border: none !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        position: fixed !important;
-        z-index: 999999 !important;
-        left: 0 !important;
-    }
-    [data-testid="stSidebarCollapsedControl"] svg,
-    [data-testid="collapsedControl"] svg {
-        color: #ffffff !important;
-        fill: #ffffff !important;
-        stroke: #ffffff !important;
-        width: 18px !important;
-        height: 18px !important;
-    }
     /* Collapse arrow inside open sidebar */
     [data-testid="stSidebar"] button[data-testid="stBaseButton-header"] {
-        background: #1E2D45 !important;
-        border-radius: 6px !important;
-        color: #ffffff !important;
+        background: #1E2D45 !important; border-radius: 6px !important; color: #ffffff !important;
     }
 
-    /* Main content: full width, no sidebar offset */
+    /* ── Main content ── */
     .block-container {
-        padding-top: 1.2rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
+        padding-top: 0.5rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
         padding-bottom: 1rem !important;
         max-width: 100% !important;
         margin-left: 0 !important;
@@ -470,41 +425,86 @@ html, body, [class*="css"] {
 
     /* Stack columns vertically */
     [data-testid="column"] {
-        width: 100% !important;
-        flex: 1 1 100% !important;
-        min-width: 100% !important;
+        width: 100% !important; flex: 1 1 100% !important; min-width: 100% !important;
     }
 
-    /* Page titles */
-    .page-title { font-size: 22px !important; }
-    .page-subtitle { font-size: 13px !important; }
+    /* ── Collapse ALL widget vertical spacing ── */
+    .stRadio, .stSelectbox, .stSlider, .stNumberInput, .stTextInput, .stCheckbox {
+        margin-bottom: 0 !important; padding-bottom: 0 !important;
+    }
+    /* Remove the gap Streamlit adds between every block-level element */
+    [data-testid="stVerticalBlock"] > div {
+        gap: 0.35rem !important;
+    }
+    /* Remove extra padding Streamlit puts on form-row divs */
+    [data-testid="stVerticalBlock"] > div > div {
+        margin-bottom: 0 !important;
+    }
+
+    /* ── Radio buttons: label left, options right — inline row ── */
+    .stRadio > label {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        color: #0A1628 !important;
+        margin-bottom: 2px !important;
+        line-height: 1.3 !important;
+    }
+    .stRadio [role="radiogroup"] {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        margin-top: 2px !important;
+    }
+    .stRadio [role="radiogroup"] label {
+        font-size: 12px !important;
+        padding: 4px 10px !important;
+        background: #F1F5F9 !important;
+        border-radius: 20px !important;
+        border: 1px solid #CBD5E1 !important;
+        margin: 0 !important;
+        line-height: 1.4 !important;
+    }
+    /* Active radio pill */
+    .stRadio [role="radiogroup"] label:has(input:checked) {
+        background: #0A1628 !important;
+        color: #ffffff !important;
+        border-color: #0A1628 !important;
+    }
+
+    /* ── Sliders: tighter ── */
+    .stSlider { margin-top: 2px !important; }
+    .stSlider > label { font-size: 13px !important; font-weight: 600 !important; margin-bottom: 0 !important; }
+
+    /* ── Number inputs ── */
+    .stNumberInput > label { font-size: 13px !important; font-weight: 600 !important; margin-bottom: 2px !important; }
+    .stNumberInput input { font-size: 14px !important; padding: 6px 10px !important; }
+
+    /* ── Selectbox ── */
+    .stSelectbox > label { font-size: 13px !important; font-weight: 600 !important; margin-bottom: 2px !important; }
+
+    /* ── Section dividers / group labels ── */
+    .input-group-label { margin: 10px 0 4px 0 !important; font-size: 12px !important; }
+
+    /* ── Page titles ── */
+    .page-title { font-size: 20px !important; }
+    .page-subtitle { font-size: 12px !important; }
     .page-title-eyebrow { font-size: 9px !important; }
-    .page-header { margin-bottom: 20px !important; padding-bottom: 14px !important; }
+    .page-header { margin-bottom: 14px !important; padding-bottom: 10px !important; }
 
-    /* Cards */
-    .mimic-card { margin-bottom: 12px !important; }
-    .prediction-card { padding: 20px 16px !important; }
-    .prediction-label { font-size: 18px !important; }
-    .prediction-confidence { font-size: 13px !important; }
-    .metric-card { padding: 14px 16px !important; }
-    .metric-value { font-size: 22px !important; }
+    /* ── Cards ── */
+    .mimic-card { margin-bottom: 10px !important; }
+    .prediction-card { padding: 16px 14px !important; }
+    .prediction-label { font-size: 17px !important; }
+    .prediction-confidence { font-size: 12px !important; }
+    .metric-card { padding: 12px 14px !important; }
+    .metric-value { font-size: 20px !important; }
 
-    /* Buttons */
-    .stButton > button {
-        width: 100% !important;
-        padding: 12px !important;
-        font-size: 15px !important;
-    }
+    /* ── Buttons ── */
+    .stButton > button { width: 100% !important; padding: 11px !important; font-size: 14px !important; }
 
-    /* Inputs */
-    .input-group-label { margin: 14px 0 8px 0 !important; }
-    .report-box { padding: 12px 14px !important; font-size: 13px !important; }
+    /* ── Misc ── */
+    .report-box { padding: 10px 12px !important; font-size: 13px !important; }
     .sidebar-logo { font-size: 18px !important; }
-
-    /* Radio buttons stack vertically */
-    .stRadio [role="radiogroup"] { flex-direction: column !important; }
-
-    /* Tables and charts */
     .stDataFrame { overflow-x: auto !important; }
     .js-plotly-plot { width: 100% !important; }
 }
@@ -585,27 +585,37 @@ page = st.session_state["page"]
 
 model, scaler, feature_names, model_ready, shap_explainer = load_model_and_data()
 
-# ── Mobile top nav (replaces broken sidebar on small screens) ──────
-# Marker div + adjacent-sibling CSS: hides the selectbox on desktop,
-# shows it on mobile. This is the only reliable way to conditionally
-# hide a Streamlit widget via CSS.
+# ── Mobile top nav bar ─────────────────────────────────────────────
 st.markdown("""
 <style>
-/* Hide the selectbox that follows the marker on desktop */
+/* Hide selectbox on desktop */
 @media (min-width: 769px) {
-    .mobile-nav-marker + div[data-testid="stSelectbox"],
     .mobile-nav-marker ~ div[data-testid="stSelectbox"] { display: none !important; }
 }
-/* Style it on mobile */
+/* Full-width navy nav bar on mobile */
 @media (max-width: 768px) {
-    .mobile-nav-marker ~ div[data-testid="stSelectbox"] > label { display: none !important; }
-    .mobile-nav-marker ~ div[data-testid="stSelectbox"] > div > div {
+    .mobile-nav-marker ~ div[data-testid="stSelectbox"] {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 9999 !important;
         background: #0A1628 !important;
-        color: #ffffff !important;
-        border: none !important;
+        border-radius: 0 !important;
+        margin: -0.75rem -0.75rem 0.75rem -0.75rem !important;
+        padding: 8px 12px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important;
+    }
+    .mobile-nav-marker ~ div[data-testid="stSelectbox"] label { display: none !important; }
+    .mobile-nav-marker ~ div[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+        background: #1E3A5F !important;
+        border: 1px solid #3B6FD4 !important;
         border-radius: 8px !important;
+        color: #ffffff !important;
         font-weight: 700 !important;
-        font-size: 15px !important;
+        font-size: 14px !important;
+        min-height: 40px !important;
+    }
+    .mobile-nav-marker ~ div[data-testid="stSelectbox"] [data-baseweb="select"] svg {
+        fill: #3B6FD4 !important;
     }
 }
 </style>
