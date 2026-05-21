@@ -403,8 +403,9 @@ html, body, [class*="css"] {
         height: 100dvh !important;
         z-index: 1000 !important;
         box-shadow: 4px 0 24px rgba(0,0,0,0.35) !important;
-        width: 240px !important;
-        min-width: 240px !important;
+        min-width: 280px !important;
+        max-width: 280px !important;
+        width: 280px !important;
     }
     [data-testid="stSidebar"] > div:first-child {
         height: 100% !important;
@@ -421,12 +422,16 @@ html, body, [class*="css"] {
         gap: 0 !important;
     }
 
-    /* Sidebar toggle button — navy pill on left edge */
-    [data-testid="stSidebarCollapsedControl"] {
-        background: #0A1628 !important;
+    /* Sidebar toggle button — teal pill on left edge (covers both testid variants) */
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"] {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background: #0D9488 !important;
         border-radius: 0 10px 10px 0 !important;
-        width: 32px !important;
-        min-height: 52px !important;
+        width: 36px !important;
+        min-height: 56px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -435,13 +440,16 @@ html, body, [class*="css"] {
         top: 50% !important;
         transform: translateY(-50%) !important;
         position: fixed !important;
+        z-index: 999999 !important;
+        left: 0 !important;
     }
-    [data-testid="stSidebarCollapsedControl"] svg {
+    [data-testid="stSidebarCollapsedControl"] svg,
+    [data-testid="collapsedControl"] svg {
         color: #ffffff !important;
         fill: #ffffff !important;
         stroke: #ffffff !important;
-        width: 16px !important;
-        height: 16px !important;
+        width: 18px !important;
+        height: 18px !important;
     }
     /* Collapse arrow inside open sidebar */
     [data-testid="stSidebar"] button[data-testid="stBaseButton-header"] {
