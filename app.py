@@ -783,6 +783,26 @@ elif "Patient Predictor" in page:
     if not model_ready:
         st.error("Model not loaded. Run `python run_simulation.py` first.")
     else:
+        # When deep mode is active: hide left column, stretch right to full width
+        if st.session_state.get("deep_mode"):
+            st.markdown("""
+            <style>
+            @media (min-width: 769px) {
+                [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
+                    display: none !important;
+                }
+                [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child {
+                    width: 100% !important;
+                    flex: 1 1 100% !important;
+                    min-width: 100% !important;
+                    position: static !important;
+                    max-height: none !important;
+                    overflow-y: visible !important;
+                }
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
         col1, col2 = st.columns([1, 1.1], gap="large")
 
         with col1:
