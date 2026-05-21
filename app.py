@@ -114,15 +114,19 @@ html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 
-/* hide default streamlit chrome */
-#MainMenu, footer, header { visibility: hidden; }
+/* hide default streamlit chrome — keep header VISIBLE so sidebar toggle works */
+#MainMenu, footer { visibility: hidden; }
+[data-testid="stToolbar"] { visibility: hidden; }
 .block-container { padding-top: 2rem; padding-bottom: 2rem; }
 
-/* ── Sidebar ──────────────────────────────────────────────────── */
+/* ── Sidebar — always expanded on desktop ──────────────────────── */
 [data-testid="stSidebar"] {
     background: #0A1628;
     border-right: 1px solid #1E2D45;
+    display: block !important;
 }
+/* Keep sidebar collapse/expand control always clickable */
+[data-testid="stSidebarCollapsedControl"] { display: flex !important; }
 [data-testid="stSidebar"] * { color: #C8D6E8 !important; }
 [data-testid="stSidebar"] .stRadio label {
     font-size: 14px;
