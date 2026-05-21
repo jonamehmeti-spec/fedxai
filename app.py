@@ -553,6 +553,11 @@ def append_patient_record(patient_values: dict, pred_class: int, hospital_id: st
     return len(updated)
 
 
+# ── Navigation state ───────────────────────────────────────────────
+PAGES = ["Training Metrics", "Patient Predictor", "Privacy", "System Info"]
+if "page" not in st.session_state:
+    st.session_state["page"] = "Training Metrics"
+
 # ── Sidebar ────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("<div class='sidebar-logo'>FedXAI</div>", unsafe_allow_html=True)
@@ -562,12 +567,12 @@ with st.sidebar:
     )
     st.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
 
-    page = st.radio("Navigate", [
-        "Training Metrics",
-        "Patient Predictor",
-        "Privacy",
-        "System Info"
-    ], label_visibility="collapsed")
+    sidebar_page = st.radio("Navigate", PAGES,
+                            index=PAGES.index(st.session_state["page"]),
+                            label_visibility="collapsed")
+    if sidebar_page != st.session_state["page"]:
+        st.session_state["page"] = sidebar_page
+        st.rerun()
 
     st.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
     st.markdown("""
@@ -576,38 +581,45 @@ with st.sidebar:
     <div class='sidebar-badge'><div class='sidebar-dot'></div>SHAP + LLM explanations</div>
     """, unsafe_allow_html=True)
 
+page = st.session_state["page"]
+
 model, scaler, feature_names, model_ready, shap_explainer = load_model_and_data()
 
-# ── Mobile sidebar trigger button ──────────────────────────────────
+# ── Mobile top nav (replaces broken sidebar on small screens) ──────
+# Marker div + adjacent-sibling CSS: hides the selectbox on desktop,
+# shows it on mobile. This is the only reliable way to conditionally
+# hide a Streamlit widget via CSS.
 st.markdown("""
 <style>
-#mobile-menu-btn {
-    display: none;
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    z-index: 9999999;
-    background: #0A1628;
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-    line-height: 40px;
-    text-align: center;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+/* Hide the selectbox that follows the marker on desktop */
+@media (min-width: 769px) {
+    .mobile-nav-marker + div[data-testid="stSelectbox"],
+    .mobile-nav-marker ~ div[data-testid="stSelectbox"] { display: none !important; }
 }
+/* Style it on mobile */
 @media (max-width: 768px) {
-    #mobile-menu-btn { display: block; }
+    .mobile-nav-marker ~ div[data-testid="stSelectbox"] > label { display: none !important; }
+    .mobile-nav-marker ~ div[data-testid="stSelectbox"] > div > div {
+        background: #0A1628 !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+    }
 }
 </style>
-<button id="mobile-menu-btn" onclick="
-    var btn = window.parent.document.querySelector('[data-testid=stSidebarCollapsedControl] button, [data-testid=collapsedControl] button, button[aria-label=\\'Open sidebar\\'], button[aria-label=\\'Close sidebar\\']');
-    if (btn) btn.click();
-">&#9776;</button>
+<div class="mobile-nav-marker"></div>
 """, unsafe_allow_html=True)
+
+mobile_page = st.selectbox("Navigate", PAGES,
+                           index=PAGES.index(st.session_state["page"]),
+                           key="mobile_nav",
+                           label_visibility="collapsed")
+if mobile_page != st.session_state["page"]:
+    st.session_state["page"] = mobile_page
+    st.rerun()
+page = st.session_state["page"]
 
 # ── Training Metrics ───────────────────────────────────────────────
 if "Training Metrics" in page:
