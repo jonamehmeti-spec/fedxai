@@ -511,14 +511,10 @@ def load_model_and_data():
             feature_names = [l.strip() for l in f.readlines()]
         scaler = joblib.load(DATA_DIR / "scaler.pkl")
         model = joblib.load(MODELS_DIR / "global_model_latest.pkl")
-        return model, scaler, feature_names, True
+        explainer = shap.TreeExplainer(model)
+        return model, scaler, feature_names, True, explainer
     except Exception:
-        return None, None, [], False
-
-
-@st.cache_resource
-def load_shap_explainer(model):
-    return shap.TreeExplainer(model)
+        return None, None, [], False, None
 
 
 def load_training_history():
@@ -572,7 +568,7 @@ with st.sidebar:
     <div class='sidebar-badge'><div class='sidebar-dot'></div>SHAP + LLM explanations</div>
     """, unsafe_allow_html=True)
 
-model, scaler, feature_names, model_ready = load_model_and_data()
+model, scaler, feature_names, model_ready, shap_explainer = load_model_and_data()
 
 
 # ── Training Metrics ───────────────────────────────────────────────
@@ -884,8 +880,7 @@ elif "Patient Predictor" in page:
                     "AnyHealthcare", "NoDocbcCost",
                 }
 
-                explainer = load_shap_explainer(model)
-                shap_vals = explainer.shap_values(X_scaled)
+                shap_vals = shap_explainer.shap_values(X_scaled)
                 # shap_vals is list of arrays [n_classes][n_samples, n_features]
                 sv = shap_vals[pred_class][0]
                 # Filter to only user-answered features, sorted by absolute contribution
