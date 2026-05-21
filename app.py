@@ -395,22 +395,11 @@ html, body, [class*="css"] {
 /* ── Mobile ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
 
-    /* ── Sidebar: full-height navy drawer ── */
-    [data-testid="stSidebar"] {
-        position: fixed !important;
-        top: 0 !important; left: 0 !important;
-        height: 100dvh !important;
-        z-index: 1000 !important;
-        box-shadow: 4px 0 24px rgba(0,0,0,0.35) !important;
-        min-width: 280px !important; max-width: 280px !important; width: 280px !important;
-    }
-    [data-testid="stSidebar"] > div:first-child { height: 100% !important; padding-top: 20px !important; }
-    [data-testid="stSidebar"] .stRadio label { font-size: 15px !important; padding: 10px 4px !important; display: block !important; }
-    [data-testid="stSidebar"] .stRadio > div { gap: 0 !important; }
-
-    /* Collapse arrow inside open sidebar */
-    [data-testid="stSidebar"] button[data-testid="stBaseButton-header"] {
-        background: #1E2D45 !important; border-radius: 6px !important; color: #ffffff !important;
+    /* ── Hide sidebar entirely on mobile ── */
+    [data-testid="stSidebar"],
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"] {
+        display: none !important;
     }
 
     /* ── Main content ── */
