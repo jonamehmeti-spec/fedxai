@@ -101,7 +101,7 @@ FLAG_COLORS = {"high": "#E8593C", "moderate": "#BA7517"}
 st.set_page_config(
     page_title="FedXAI",
     page_icon=None,
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="expanded"
 )
 
@@ -491,6 +491,76 @@ html, body, [class*="css"] {
     .stDataFrame { overflow-x: auto !important; }
     .js-plotly-plot { width: 100% !important; }
 }
+
+/* ── Desktop-only: sticky results panel ─────────────────────────── */
+@media (min-width: 769px) {
+    /* Right column stays fixed in viewport while left scrolls */
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child {
+        position: sticky !important;
+        top: 1.5rem !important;
+        align-self: flex-start !important;
+        max-height: calc(100vh - 3rem) !important;
+        overflow-y: auto !important;
+        padding-right: 4px !important;
+    }
+
+    /* Input section group labels */
+    .input-group-label {
+        font-size: 10px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.12em !important;
+        text-transform: uppercase !important;
+        color: #3B6FD4 !important;
+        background: #EEF3FB !important;
+        display: inline-block !important;
+        padding: 3px 10px !important;
+        border-radius: 20px !important;
+        margin: 18px 0 8px 0 !important;
+    }
+
+    /* Tighten widget gaps in left col on desktop */
+    .stRadio { margin-bottom: 4px !important; }
+    .stRadio > label { font-size: 13px !important; color: #334155 !important; margin-bottom: 2px !important; }
+
+    /* Results panel empty state */
+    .results-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 320px;
+        background: linear-gradient(135deg, #F8FAFD 0%, #EEF3FB 100%);
+        border: 2px dashed #CBD5E1;
+        border-radius: 16px;
+        color: #94A3B8;
+        font-size: 14px;
+        text-align: center;
+        gap: 12px;
+        padding: 40px 24px;
+    }
+    .results-empty-icon { font-size: 36px; opacity: 0.4; }
+    .results-empty-title { font-size: 15px; font-weight: 700; color: #64748B; }
+    .results-empty-sub { font-size: 12px; color: #94A3B8; line-height: 1.6; }
+
+    /* Section divider inside results */
+    .result-section-label {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #64748B;
+        margin: 16px 0 8px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .result-section-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, #E2E8F0, transparent);
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -706,7 +776,7 @@ elif "Patient Predictor" in page:
     if not model_ready:
         st.error("Model not loaded. Run `python run_simulation.py` first.")
     else:
-        col1, col2 = st.columns([1, 1])
+        col1, col2 = st.columns([1, 1.1], gap="large")
 
         with col1:
             st.markdown("<div class='input-group-label'>Demographics</div>", unsafe_allow_html=True)
@@ -780,7 +850,13 @@ elif "Patient Predictor" in page:
             with col_w:
                 weight_kg = st.number_input("Weight (kg)", min_value=30, max_value=250, value=75, step=1)
             bmi = round(weight_kg / ((height_cm / 100) ** 2), 1)
-            st.caption(f"BMI: **{bmi}**")
+            bmi_cat = "Underweight" if bmi < 18.5 else "Normal" if bmi < 25 else "Overweight" if bmi < 30 else "Obese"
+            bmi_color = "#1D9E75" if bmi < 25 else "#F59E0B" if bmi < 30 else "#E8593C"
+            st.markdown(f"""<div style='font-size:12px; color:#64748B; margin-top:2px'>
+                BMI: <b style='color:{bmi_color}; font-size:14px'>{bmi}</b>
+                <span style='background:{bmi_color}18; color:{bmi_color}; font-size:10px;
+                             font-weight:700; padding:2px 8px; border-radius:12px; margin-left:6px'>{bmi_cat}</span>
+            </div>""", unsafe_allow_html=True)
 
             st.markdown("<div class='input-group-label'>Clinical Indicators</div>", unsafe_allow_html=True)
             high_bp = 1 if st.radio("High Blood Pressure", ["No", "Yes"], horizontal=True) == "Yes" else 0
@@ -837,6 +913,7 @@ elif "Patient Predictor" in page:
             no_doc_cost = 1 if healthcare == 0 else 0
 
         with col2:
+            # ── Build patient_values dict (always needed for button) ──
             patient_values = {
                 "Age": age_brfss, "BMI": bmi, "HighBP": high_bp, "HighChol": high_chol,
                 "Smoker": smoker, "PhysActivity": phys_activity, "GenHlth": gen_hlth,
@@ -858,6 +935,7 @@ elif "Patient Predictor" in page:
                 "TestosteroneTherapy": testosterone_therapy,
             }
 
+            st.markdown("<div class='result-section-label'>Prediction</div>", unsafe_allow_html=True)
             if st.button("Run Prediction", use_container_width=True, type="primary"):
                 pred_class, proba, X_scaled = predict_patient(model, scaler, feature_names, patient_values)
                 label = CLASS_NAMES[pred_class]
@@ -876,6 +954,15 @@ elif "Patient Predictor" in page:
                     "_proba": proba.tolist(),
                     "_X_scaled": X_scaled.tolist(),
                 })
+
+            if not st.session_state.get("prediction_done"):
+                st.markdown("""
+                <div class='results-empty'>
+                    <div class='results-empty-icon'>&#9673;</div>
+                    <div class='results-empty-title'>No prediction yet</div>
+                    <div class='results-empty-sub'>Fill in the clinical indicators on the left<br>and press <b>Run Prediction</b> to see the risk assessment.</div>
+                </div>
+                """, unsafe_allow_html=True)
 
             if st.session_state.get("prediction_done"):
                 label = st.session_state["stage1_label"]
@@ -911,7 +998,7 @@ elif "Patient Predictor" in page:
                 )
                 st.plotly_chart(fig_prob, use_container_width=True)
 
-                st.markdown("<div class='section-title' style='margin-top:12px'>Feature Contributions</div>",
+                st.markdown("<div class='result-section-label' style='margin-top:16px'>Feature Contributions</div>",
                             unsafe_allow_html=True)
 
                 # Features the user actually answered
@@ -1012,7 +1099,7 @@ elif "Patient Predictor" in page:
                     )))
 
                 if active_gender_flags:
-                    st.markdown("<div class='section-title' style='margin-top:20px'>Additional Risk Factors</div>",
+                    st.markdown("<div class='result-section-label' style='margin-top:16px'>Additional Risk Factors</div>",
                                 unsafe_allow_html=True)
                     st.markdown("""
                     <div style='font-size:12px; color:#64748B; margin-bottom:10px;'>
@@ -1034,7 +1121,7 @@ elif "Patient Predictor" in page:
                         </div>
                         """, unsafe_allow_html=True)
 
-                st.markdown("<div class='section-title' style='margin-top:20px'>Clinical Summary</div>",
+                st.markdown("<div class='result-section-label' style='margin-top:16px'>Clinical Summary</div>",
                             unsafe_allow_html=True)
 
                 top_3_features = [
