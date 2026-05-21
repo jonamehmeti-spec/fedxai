@@ -1158,16 +1158,6 @@ elif "Patient Predictor" in page:
                 if st.button("Run Full Diagnostic Pipeline", use_container_width=True, type="primary"):
                     st.session_state["deep_mode"] = True
 
-                if st.session_state.get("deep_mode"):
-                    from deep_diagnosis import render_deep_diagnosis
-                    render_deep_diagnosis(
-                        stage1_proba=st.session_state["stage1_proba"],
-                        patient_values=st.session_state["patient_values"],
-                        stage1_label=st.session_state["stage1_label"],
-                        stage1_confidence=st.session_state["stage1_confidence"],
-                        patient_sex=st.session_state.get("patient_sex", "other"),
-                    )
-
                 # ── Save Patient Record ────────────────────────────
                 st.markdown("<div class='result-section-label' style='margin-top:20px'>Save Record</div>",
                             unsafe_allow_html=True)
@@ -1208,6 +1198,18 @@ elif "Patient Predictor" in page:
                         )
                     else:
                         st.error(f"Save failed: {arg1}")
+
+        # ── Full Diagnostic Pipeline — full width below columns ────
+        if st.session_state.get("deep_mode"):
+            st.markdown("<hr style='margin:2rem 0; border-color:#E2E8F0'>", unsafe_allow_html=True)
+            from deep_diagnosis import render_deep_diagnosis
+            render_deep_diagnosis(
+                stage1_proba=st.session_state["stage1_proba"],
+                patient_values=st.session_state["patient_values"],
+                stage1_label=st.session_state["stage1_label"],
+                stage1_confidence=st.session_state["stage1_confidence"],
+                patient_sex=st.session_state.get("patient_sex", "other"),
+            )
 
 
 # ── Privacy ────────────────────────────────────────────────────────
