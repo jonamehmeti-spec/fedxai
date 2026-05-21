@@ -101,7 +101,7 @@ st.set_page_config(
     page_title="FedXAI",
     page_icon=None,
     layout="centered",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 st.markdown("""
