@@ -492,22 +492,32 @@ html, body, [class*="css"] {
     .js-plotly-plot { width: 100% !important; }
 }
 
-/* ── Sidebar toggle button ──────────────────────────────────────── */
-.sidebar-toggle-wrap button {
-    background: transparent !important;
-    border: 1px solid #CBD5E1 !important;
-    color: #64748B !important;
-    font-size: 11px !important;
-    padding: 3px 10px !important;
-    border-radius: 6px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.04em !important;
+/* ── Sidebar toggle button — hide on mobile, style on desktop ────── */
+@media (max-width: 768px) {
+    [data-testid="stElementContainer"]:has(.desktop-toggle-marker) + [data-testid="stElementContainer"] {
+        display: none !important;
+    }
 }
-.sidebar-toggle-wrap button:hover {
-    border-color: #0A1628 !important;
-    color: #0A1628 !important;
-    background: #F1F5F9 !important;
+@media (min-width: 769px) {
+    [data-testid="stElementContainer"]:has(.desktop-toggle-marker) + [data-testid="stElementContainer"] button {
+        background: transparent !important;
+        border: 1px solid #CBD5E1 !important;
+        color: #64748B !important;
+        font-size: 11px !important;
+        padding: 3px 12px !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.04em !important;
+        min-height: unset !important;
+        height: 28px !important;
+    }
+    [data-testid="stElementContainer"]:has(.desktop-toggle-marker) + [data-testid="stElementContainer"] button:hover {
+        border-color: #0A1628 !important;
+        color: #0A1628 !important;
+        background: #F1F5F9 !important;
+    }
 }
+
 @media (max-width: 768px) {
     .sidebar-toggle-wrap { display: none !important; }
 }
@@ -716,29 +726,28 @@ page = st.session_state["page"]
 if "sidebar_open" not in st.session_state:
     st.session_state["sidebar_open"] = True
 
-if st.session_state["sidebar_open"]:
+# Inject hide CSS only when closed; sidebar is visible by default
+if not st.session_state["sidebar_open"]:
     st.markdown("""
     <style>
     @media (min-width: 769px) {
-        [data-testid="stSidebar"] { display: flex !important; }
-    }
-    </style>""", unsafe_allow_html=True)
-else:
-    st.markdown("""
-    <style>
-    @media (min-width: 769px) {
-        [data-testid="stSidebar"] { display: none !important; }
-        [data-testid="stSidebarCollapsedControl"] { display: none !important; }
-        .block-container { max-width: 100% !important; padding-left: 2rem !important; }
+        [data-testid="stSidebar"],
+        [data-testid="stSidebarCollapsedControl"] {
+            display: none !important;
+            width: 0 !important;
+            min-width: 0 !important;
+        }
+        section[data-testid="stMain"] { margin-left: 0 !important; }
+        .block-container { padding-left: 2rem !important; max-width: 100% !important; }
     }
     </style>""", unsafe_allow_html=True)
 
+# Marker so we can hide this button on mobile via :has() CSS
+st.markdown('<div class="desktop-toggle-marker"></div>', unsafe_allow_html=True)
 toggle_label = "Hide menu" if st.session_state["sidebar_open"] else "Show menu"
-st.markdown("<div class='sidebar-toggle-wrap'>", unsafe_allow_html=True)
 if st.button(toggle_label, key="sidebar_toggle"):
     st.session_state["sidebar_open"] = not st.session_state["sidebar_open"]
     st.rerun()
-st.markdown("</div>", unsafe_allow_html=True)
 
 # ── Training Metrics ───────────────────────────────────────────────
 if "Training Metrics" in page:
