@@ -101,7 +101,7 @@ st.set_page_config(
     page_title="FedXAI",
     page_icon=None,
     layout="centered",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="collapsed"
 )
 
 st.markdown("""
@@ -391,39 +391,75 @@ html, body, [class*="css"] {
 }
 
 /* ── Mobile nav selectbox — hidden on desktop ─────────────────── */
-.mobile-nav { display: none; }
-
 /* ── Mobile ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-    /* Show top nav, hide sidebar entirely */
-    .mobile-nav {
+
+    /* ── Sidebar: full-height navy drawer from left ── */
+    [data-testid="stSidebar"] {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        height: 100dvh !important;
+        z-index: 1000 !important;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.35) !important;
+        width: 240px !important;
+        min-width: 240px !important;
+    }
+    [data-testid="stSidebar"] > div:first-child {
+        height: 100% !important;
+        padding-top: 20px !important;
+    }
+
+    /* Sidebar nav items — larger tap targets */
+    [data-testid="stSidebar"] .stRadio label {
+        font-size: 15px !important;
+        padding: 10px 4px !important;
         display: block !important;
-        background: #0A1628;
-        padding: 10px 16px 12px 16px;
-        margin: -1rem -1rem 1.2rem -1rem;
-        border-bottom: 1px solid #1E2D45;
     }
-    .mobile-nav label { display: none !important; }
-    .mobile-nav .stSelectbox > div > div {
+    [data-testid="stSidebar"] .stRadio > div {
+        gap: 0 !important;
+    }
+
+    /* Sidebar toggle button — navy pill on left edge */
+    [data-testid="stSidebarCollapsedControl"] {
+        background: #0A1628 !important;
+        border-radius: 0 10px 10px 0 !important;
+        width: 32px !important;
+        min-height: 52px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 3px 0 12px rgba(0,0,0,0.25) !important;
+        border: none !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        position: fixed !important;
+    }
+    [data-testid="stSidebarCollapsedControl"] svg {
+        color: #ffffff !important;
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
+        width: 16px !important;
+        height: 16px !important;
+    }
+    /* Collapse arrow inside open sidebar */
+    [data-testid="stSidebar"] button[data-testid="stBaseButton-header"] {
         background: #1E2D45 !important;
-        color: #C8D6E8 !important;
-        border: 1px solid #2E4060 !important;
-        border-radius: 8px !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
+        border-radius: 6px !important;
+        color: #ffffff !important;
     }
-    [data-testid="stSidebar"] { display: none !important; }
-    [data-testid="stSidebarNav"] { display: none !important; }
-    /* Tighten page padding */
+
+    /* Main content: full width, no sidebar offset */
     .block-container {
-        padding-top: 1rem !important;
+        padding-top: 1.2rem !important;
         padding-left: 1rem !important;
         padding-right: 1rem !important;
         padding-bottom: 1rem !important;
         max-width: 100% !important;
+        margin-left: 0 !important;
     }
 
-    /* Collapse Streamlit columns to full width */
+    /* Stack columns vertically */
     [data-testid="column"] {
         width: 100% !important;
         flex: 1 1 100% !important;
@@ -436,49 +472,31 @@ html, body, [class*="css"] {
     .page-title-eyebrow { font-size: 9px !important; }
     .page-header { margin-bottom: 20px !important; padding-bottom: 14px !important; }
 
-    /* Stage headers */
+    /* Cards */
     .mimic-card { margin-bottom: 12px !important; }
-
-    /* Prediction card */
     .prediction-card { padding: 20px 16px !important; }
     .prediction-label { font-size: 18px !important; }
     .prediction-confidence { font-size: 13px !important; }
-
-    /* Metric cards */
     .metric-card { padding: 14px 16px !important; }
     .metric-value { font-size: 22px !important; }
 
-    /* Buttons full width on mobile */
+    /* Buttons */
     .stButton > button {
         width: 100% !important;
         padding: 12px !important;
         font-size: 15px !important;
     }
 
-    /* Input labels and spacing */
+    /* Inputs */
     .input-group-label { margin: 14px 0 8px 0 !important; }
-
-    /* Report box */
     .report-box { padding: 12px 14px !important; font-size: 13px !important; }
-
-    /* Sidebar collapses by default on mobile — no changes needed,
-       but reduce logo size so it fits the collapsed header bar */
     .sidebar-logo { font-size: 18px !important; }
 
-    /* Reduce top-test teal card font */
-    .stMarkdown div[style*="background:#0D9488"] {
-        padding: 12px !important;
-    }
+    /* Radio buttons stack vertically */
+    .stRadio [role="radiogroup"] { flex-direction: column !important; }
 
-    /* Radio buttons wrap better */
-    .stRadio [role="radiogroup"] {
-        flex-direction: column !important;
-    }
-
-    /* Dataframes scroll horizontally */
+    /* Tables and charts */
     .stDataFrame { overflow-x: auto !important; }
-
-    /* Plotly charts full width */
     .js-plotly-plot { width: 100% !important; }
 }
 </style>
@@ -530,8 +548,6 @@ def append_patient_record(patient_values: dict, pred_class: int, hospital_id: st
 
 
 # ── Sidebar ────────────────────────────────────────────────────────
-PAGES = ["Training Metrics", "Patient Predictor", "Privacy", "System Info"]
-
 with st.sidebar:
     st.markdown("<div class='sidebar-logo'>FedXAI</div>", unsafe_allow_html=True)
     st.markdown(
@@ -540,7 +556,12 @@ with st.sidebar:
     )
     st.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
 
-    sidebar_page = st.radio("Navigate", PAGES, label_visibility="collapsed")
+    page = st.radio("Navigate", [
+        "Training Metrics",
+        "Patient Predictor",
+        "Privacy",
+        "System Info"
+    ], label_visibility="collapsed")
 
     st.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
     st.markdown("""
@@ -548,21 +569,6 @@ with st.sidebar:
     <div class='sidebar-badge'><div class='sidebar-dot'></div>FedAvg aggregation</div>
     <div class='sidebar-badge'><div class='sidebar-dot'></div>SHAP + LLM explanations</div>
     """, unsafe_allow_html=True)
-
-# Mobile top nav — hidden on desktop via CSS, primary nav on mobile
-st.markdown("<div class='mobile-nav'>", unsafe_allow_html=True)
-mobile_page = st.selectbox("Go to", PAGES, label_visibility="collapsed")
-st.markdown("</div>", unsafe_allow_html=True)
-
-# Mobile nav wins on small screens; sidebar wins on desktop
-# We use a single session-state key so both controls stay in sync
-if "page" not in st.session_state:
-    st.session_state["page"] = PAGES[0]
-
-# Whichever changed last takes priority — detect via query param trick
-page = mobile_page if mobile_page != st.session_state.get("_last_sidebar", mobile_page) else sidebar_page
-st.session_state["_last_sidebar"] = sidebar_page
-st.session_state["page"] = page
 
 model, scaler, feature_names, model_ready = load_model_and_data()
 
