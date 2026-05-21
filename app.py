@@ -492,6 +492,26 @@ html, body, [class*="css"] {
     .js-plotly-plot { width: 100% !important; }
 }
 
+/* ── Sidebar toggle button ──────────────────────────────────────── */
+.sidebar-toggle-wrap button {
+    background: transparent !important;
+    border: 1px solid #CBD5E1 !important;
+    color: #64748B !important;
+    font-size: 11px !important;
+    padding: 3px 10px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.04em !important;
+}
+.sidebar-toggle-wrap button:hover {
+    border-color: #0A1628 !important;
+    color: #0A1628 !important;
+    background: #F1F5F9 !important;
+}
+@media (max-width: 768px) {
+    .sidebar-toggle-wrap { display: none !important; }
+}
+
 /* ── Desktop-only: sticky input panel, free-scrolling results ───── */
 @media (min-width: 769px) {
     /* LEFT column — frozen in viewport while right side scrolls */
@@ -691,6 +711,34 @@ st.selectbox("Navigate", PAGES,
              on_change=_on_mobile_nav_change,
              label_visibility="collapsed")
 page = st.session_state["page"]
+
+# ── Desktop sidebar toggle ──────────────────────────────────────────
+if "sidebar_open" not in st.session_state:
+    st.session_state["sidebar_open"] = True
+
+if st.session_state["sidebar_open"]:
+    st.markdown("""
+    <style>
+    @media (min-width: 769px) {
+        [data-testid="stSidebar"] { display: flex !important; }
+    }
+    </style>""", unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <style>
+    @media (min-width: 769px) {
+        [data-testid="stSidebar"] { display: none !important; }
+        [data-testid="stSidebarCollapsedControl"] { display: none !important; }
+        .block-container { max-width: 100% !important; padding-left: 2rem !important; }
+    }
+    </style>""", unsafe_allow_html=True)
+
+toggle_label = "Hide menu" if st.session_state["sidebar_open"] else "Show menu"
+st.markdown("<div class='sidebar-toggle-wrap'>", unsafe_allow_html=True)
+if st.button(toggle_label, key="sidebar_toggle"):
+    st.session_state["sidebar_open"] = not st.session_state["sidebar_open"]
+    st.rerun()
+st.markdown("</div>", unsafe_allow_html=True)
 
 # ── Training Metrics ───────────────────────────────────────────────
 if "Training Metrics" in page:
