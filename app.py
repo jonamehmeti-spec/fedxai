@@ -783,26 +783,6 @@ elif "Patient Predictor" in page:
     if not model_ready:
         st.error("Model not loaded. Run `python run_simulation.py` first.")
     else:
-        # When deep mode is active: hide left column, stretch right to full width
-        if st.session_state.get("deep_mode"):
-            st.markdown("""
-            <style>
-            @media (min-width: 769px) {
-                [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
-                    display: none !important;
-                }
-                [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child {
-                    width: 100% !important;
-                    flex: 1 1 100% !important;
-                    min-width: 100% !important;
-                    position: static !important;
-                    max-height: none !important;
-                    overflow-y: visible !important;
-                }
-            }
-            </style>
-            """, unsafe_allow_html=True)
-
         col1, col2 = st.columns([1, 1.1], gap="large")
 
         with col1:
@@ -1185,16 +1165,6 @@ elif "Patient Predictor" in page:
                 if st.button("Run Full Diagnostic Pipeline", use_container_width=True, type="primary"):
                     st.session_state["deep_mode"] = True
 
-                if st.session_state.get("deep_mode"):
-                    from deep_diagnosis import render_deep_diagnosis
-                    render_deep_diagnosis(
-                        stage1_proba=st.session_state["stage1_proba"],
-                        patient_values=st.session_state["patient_values"],
-                        stage1_label=st.session_state["stage1_label"],
-                        stage1_confidence=st.session_state["stage1_confidence"],
-                        patient_sex=st.session_state.get("patient_sex", "other"),
-                    )
-
                 # ── Save Patient Record ────────────────────────────
                 st.markdown("<div class='result-section-label' style='margin-top:20px'>Save Record</div>",
                             unsafe_allow_html=True)
@@ -1236,6 +1206,18 @@ elif "Patient Predictor" in page:
                     else:
                         st.error(f"Save failed: {arg1}")
 
+        # ── Full Diagnostic Pipeline — full width, outside columns ─
+        if st.session_state.get("deep_mode"):
+            st.markdown("<hr style='margin:2rem 0; border:none; border-top:1px solid #E2E8F0'>",
+                        unsafe_allow_html=True)
+            from deep_diagnosis import render_deep_diagnosis
+            render_deep_diagnosis(
+                stage1_proba=st.session_state["stage1_proba"],
+                patient_values=st.session_state["patient_values"],
+                stage1_label=st.session_state["stage1_label"],
+                stage1_confidence=st.session_state["stage1_confidence"],
+                patient_sex=st.session_state.get("patient_sex", "other"),
+            )
 
 
 # ── Privacy ────────────────────────────────────────────────────────
