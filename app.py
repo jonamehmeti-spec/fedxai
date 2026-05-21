@@ -623,8 +623,10 @@ st.markdown("""
 <div class="mobile-nav-marker"></div>
 """, unsafe_allow_html=True)
 
+# Keep the widget state in sync with the canonical page state so the
+# selectbox never overwrites a navigation that happened via the sidebar.
+st.session_state["mobile_nav"] = st.session_state["page"]
 mobile_page = st.selectbox("Navigate", PAGES,
-                           index=PAGES.index(st.session_state["page"]),
                            key="mobile_nav",
                            label_visibility="collapsed")
 if mobile_page != st.session_state["page"]:
