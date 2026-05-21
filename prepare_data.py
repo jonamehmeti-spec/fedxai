@@ -43,7 +43,7 @@ CLASS_NAMES = {
     0: "Healthy",
     1: "Diabetes / Prediabetes",
     2: "High Cardiovascular Risk",
-    3: "Hypertension Risk"
+    3: "Cardiometabolic Risk"
 }
 
 
@@ -55,8 +55,9 @@ def create_multiclass_target(df: pd.DataFrame) -> pd.Series:
     """
     target = pd.Series(0, index=df.index, name=TARGET_COL)
 
-    # Class 3: Hypertension risk (HighBP + HighChol)
-    hypertension_mask = (df["HighBP"] == 1) & (df["HighChol"] == 1)
+    # Class 3: Cardiometabolic risk — elevated BP or elevated cholesterol
+    # OR so that high cholesterol alone registers as risk, not Healthy
+    hypertension_mask = (df["HighBP"] == 1) | (df["HighChol"] == 1)
     target[hypertension_mask] = 3
 
     # Class 1: Diabetes / prediabetes (overrides hypertension)

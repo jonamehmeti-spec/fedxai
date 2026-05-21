@@ -150,6 +150,7 @@ class HospitalClient(fl.client.NumPyClient):
                 solver="lbfgs",
                 multi_class="multinomial",
                 C=1.0,
+                class_weight="balanced",
                 random_state=42
             )
 
