@@ -697,38 +697,6 @@ st.selectbox("Navigate", PAGES,
              label_visibility="collapsed")
 page = st.session_state["page"]
 
-# ── Desktop sidebar toggle — pure JS, no rerun needed ──────────────
-st.markdown("""
-<style>
-#menu-toggle-btn {
-    background: transparent;
-    border: 1px solid #CBD5E1;
-    color: #64748B;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 4px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    letter-spacing: 0.05em;
-    font-family: Inter, sans-serif;
-    margin-bottom: 8px;
-    transition: all 0.15s ease;
-}
-#menu-toggle-btn:hover {
-    border-color: #0A1628;
-    color: #0A1628;
-    background: #F1F5F9;
-}
-@media (max-width: 768px) { #menu-toggle-btn { display: none !important; } }
-</style>
-<button id="menu-toggle-btn" onclick="
-  var closeBtn = document.querySelector('[data-testid=stSidebar] button[data-testid=stBaseButton-header]');
-  var openBtn  = document.querySelector('[data-testid=stSidebarCollapsedControl] button');
-  var me = document.getElementById('menu-toggle-btn');
-  if (closeBtn) { closeBtn.click(); me.textContent = 'Show menu'; }
-  else if (openBtn) { openBtn.click(); me.textContent = 'Hide menu'; }
-">Hide menu</button>
-""", unsafe_allow_html=True)
 
 # ── Training Metrics ───────────────────────────────────────────────
 if "Training Metrics" in page:
