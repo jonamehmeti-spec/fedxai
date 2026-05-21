@@ -464,12 +464,6 @@ html, body, [class*="css"] {
         margin: 0 !important;
         line-height: 1.4 !important;
     }
-    /* Active radio pill */
-    .stRadio [role="radiogroup"] label:has(input:checked) {
-        background: #0A1628 !important;
-        color: #ffffff !important;
-        border-color: #0A1628 !important;
-    }
 
     /* ── Sliders: tighter ── */
     .stSlider { margin-top: 2px !important; }
@@ -606,16 +600,23 @@ st.markdown("""
     }
     .mobile-nav-marker ~ div[data-testid="stSelectbox"] label { display: none !important; }
     .mobile-nav-marker ~ div[data-testid="stSelectbox"] [data-baseweb="select"] > div {
-        background: #1E3A5F !important;
-        border: 1px solid #3B6FD4 !important;
+        background: #0A1628 !important;
+        border: 2px solid #3B6FD4 !important;
         border-radius: 8px !important;
         color: #ffffff !important;
-        font-weight: 700 !important;
-        font-size: 14px !important;
-        min-height: 40px !important;
+        font-weight: 800 !important;
+        font-size: 15px !important;
+        min-height: 44px !important;
+        letter-spacing: 0.01em !important;
     }
     .mobile-nav-marker ~ div[data-testid="stSelectbox"] [data-baseweb="select"] svg {
-        fill: #3B6FD4 !important;
+        fill: #ffffff !important;
+    }
+    /* Value text inside the selectbox */
+    .mobile-nav-marker ~ div[data-testid="stSelectbox"] [data-baseweb="select"] [data-testid="stMarkdownContainer"],
+    .mobile-nav-marker ~ div[data-testid="stSelectbox"] [data-baseweb="select"] span,
+    .mobile-nav-marker ~ div[data-testid="stSelectbox"] [data-baseweb="select"] div {
+        color: #ffffff !important;
     }
 }
 </style>
