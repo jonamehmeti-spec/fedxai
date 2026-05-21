@@ -881,8 +881,11 @@ elif "Patient Predictor" in page:
                 }
 
                 shap_vals = shap_explainer.shap_values(X_scaled)
-                # shap_vals is list of arrays [n_classes][n_samples, n_features]
-                sv = shap_vals[pred_class][0]
+                # Newer SHAP returns (n_samples, n_features, n_classes); older returns list per class
+                if isinstance(shap_vals, np.ndarray) and shap_vals.ndim == 3:
+                    sv = shap_vals[0, :, pred_class]
+                else:
+                    sv = np.array(shap_vals[pred_class][0])
                 # Filter to only user-answered features, sorted by absolute contribution
                 user_idx = [
                     i for i, name in enumerate(feature_names)
