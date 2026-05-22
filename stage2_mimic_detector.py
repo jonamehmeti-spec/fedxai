@@ -262,7 +262,9 @@ def detect_mimics(
             disease_data, active_features, common_flags, patient_sex
         )
 
-        if confidence >= min_confidence:
+        # Require at least 2 matched features OR confidence above 0.25
+        # to prevent broad non-specific conditions from appearing on every result
+        if confidence >= min_confidence and (len(matched) >= 2 or confidence > 0.25):
             # Collect unique readable sources for the matched features
             sources = []
             for feat in matched:
