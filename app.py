@@ -34,9 +34,6 @@ import shap
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-if 'sidebar_collapsed' not in st.session_state:
-    st.session_state['sidebar_collapsed'] = False
-
 DATA_DIR = ROOT / "data"
 MODELS_DIR = ROOT / "models"
 LOGS_DIR = ROOT / "logs"
@@ -632,65 +629,23 @@ PAGES = ["Training Metrics", "Patient Predictor", "Privacy Dashboard", "System I
 if "page" not in st.session_state:
     st.session_state["page"] = "Training Metrics"
 
-# ── Sidebar transition (always injected) ───────────────────────────
-st.markdown('''
-<style>
-[data-testid="stSidebar"] {
-    transition: min-width 0.3s ease, max-width 0.3s ease;
-}
-</style>
-''', unsafe_allow_html=True)
-
-# ── Collapsed sidebar CSS ──────────────────────────────────────────
-if st.session_state['sidebar_collapsed']:
-    st.markdown('''
-    <style>
-    [data-testid="stSidebar"] {
-        min-width: 18px !important;
-        max-width: 18px !important;
-        width: 18px !important;
-        background-color: #0F1F3D !important;
-        overflow: hidden !important;
-    }
-    [data-testid="stSidebar"] > div {
-        padding: 0 !important;
-        overflow: hidden !important;
-    }
-    [data-testid="stSidebar"] * {
-        visibility: hidden !important;
-    }
-    </style>
-    ''', unsafe_allow_html=True)
-
 # ── Sidebar ────────────────────────────────────────────────────────
 with st.sidebar:
-    toggle_label = '▶' if st.session_state['sidebar_collapsed'] else '◀'
-    if st.button(toggle_label, key='sidebar_toggle', help='Collapse/expand menu'):
-        st.session_state['sidebar_collapsed'] = not st.session_state['sidebar_collapsed']
-        st.rerun()
-
-    if not st.session_state['sidebar_collapsed']:
-        st.markdown('## FedXAI')
-        st.markdown('Federated & Explainable AI for Chronic Disease Prediction')
-        st.markdown('---')
-        page = st.radio('Navigate', [
-            'Training Metrics',
-            'Patient Predictor',
-            'Privacy Dashboard',
-            'System Info'
-        ], label_visibility='collapsed')
-        st.markdown('---')
-        st.markdown('''
-        <span class='privacy-badge'>🔒 No raw data shared</span><br>
-        <span class='privacy-badge'>✓ FedAvg aggregation</span><br>
-        <span class='privacy-badge'>✓ XAI + Deep Diagnosis</span>
-        ''', unsafe_allow_html=True)
-
-if 'current_page' not in st.session_state:
-    st.session_state['current_page'] = 'Patient Predictor'
-if not st.session_state['sidebar_collapsed']:
-    st.session_state['current_page'] = page
-page = st.session_state['current_page']
+    st.markdown('## FedXAI')
+    st.markdown('Federated & Explainable AI for Chronic Disease Prediction')
+    st.markdown('---')
+    page = st.radio('Navigate', [
+        'Training Metrics',
+        'Patient Predictor',
+        'Privacy Dashboard',
+        'System Info'
+    ], key='page', label_visibility='collapsed')
+    st.markdown('---')
+    st.markdown('''
+    <span class='privacy-badge'>🔒 No raw data shared</span><br>
+    <span class='privacy-badge'>✓ FedAvg aggregation</span><br>
+    <span class='privacy-badge'>✓ XAI + Deep Diagnosis</span>
+    ''', unsafe_allow_html=True)
 
 model, scaler, feature_names, model_ready, shap_explainer = load_model_and_data()
 
