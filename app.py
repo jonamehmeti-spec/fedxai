@@ -412,35 +412,44 @@ html, body, [class*="css"] {
 /* ── Mobile ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
 
-    /* ── Main content ── */
-    .block-container {
-        padding-top: 0.5rem !important;
-        padding-left: 0.75rem !important;
-        padding-right: 0.75rem !important;
-        padding-bottom: 1rem !important;
-        max-width: 100% !important;
-        margin-left: 0 !important;
+    /* ── Hide sidebar entirely — mobile nav selectbox handles navigation ── */
+    [data-testid="stSidebar"],
+    [data-testid="stSidebarCollapsedControl"] {
+        display: none !important;
     }
 
-    /* Stack columns vertically */
+    /* ── Stretch main content to full viewport width ── */
+    [data-testid="stAppViewContainer"] > section:last-child {
+        margin-left: 0 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+    }
+    .block-container {
+        padding-top: 0.75rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        padding-bottom: 1.5rem !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* ── Stack two-column layouts vertically ── */
     [data-testid="column"] {
-        width: 100% !important; flex: 1 1 100% !important; min-width: 100% !important;
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
     }
 
     /* ── Collapse ALL widget vertical spacing ── */
     .stRadio, .stSelectbox, .stSlider, .stNumberInput, .stTextInput, .stCheckbox {
-        margin-bottom: 0 !important; padding-bottom: 0 !important;
-    }
-    /* Remove the gap Streamlit adds between every block-level element */
-    [data-testid="stVerticalBlock"] > div {
-        gap: 0.35rem !important;
-    }
-    /* Remove extra padding Streamlit puts on form-row divs */
-    [data-testid="stVerticalBlock"] > div > div {
         margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
     }
+    [data-testid="stVerticalBlock"] > div { gap: 0.4rem !important; }
+    [data-testid="stVerticalBlock"] > div > div { margin-bottom: 0 !important; }
 
-    /* ── Radio buttons: label left, options right — inline row ── */
+    /* ── Radio buttons — pill style horizontal row ── */
     .stRadio > label {
         font-size: 13px !important;
         font-weight: 600 !important;
@@ -464,22 +473,18 @@ html, body, [class*="css"] {
         line-height: 1.4 !important;
     }
 
-    /* ── Sliders: tighter ── */
+    /* ── Inputs ── */
     .stSlider { margin-top: 2px !important; }
     .stSlider > label { font-size: 13px !important; font-weight: 600 !important; margin-bottom: 0 !important; }
-
-    /* ── Number inputs ── */
     .stNumberInput > label { font-size: 13px !important; font-weight: 600 !important; margin-bottom: 2px !important; }
     .stNumberInput input { font-size: 14px !important; padding: 6px 10px !important; }
-
-    /* ── Selectbox ── */
     .stSelectbox > label { font-size: 13px !important; font-weight: 600 !important; margin-bottom: 2px !important; }
 
-    /* ── Section dividers / group labels ── */
+    /* ── Section labels ── */
     .input-group-label { margin: 10px 0 4px 0 !important; font-size: 12px !important; }
 
-    /* ── Page titles ── */
-    .page-title { font-size: 20px !important; }
+    /* ── Page header ── */
+    .page-title { font-size: 22px !important; }
     .page-subtitle { font-size: 12px !important; }
     .page-title-eyebrow { font-size: 9px !important; }
     .page-header { margin-bottom: 14px !important; padding-bottom: 10px !important; }
@@ -492,14 +497,18 @@ html, body, [class*="css"] {
     .metric-card { padding: 12px 14px !important; }
     .metric-value { font-size: 20px !important; }
 
-    /* ── Buttons ── */
-    .stButton > button { width: 100% !important; padding: 11px !important; font-size: 14px !important; }
+    /* ── Buttons — full width ── */
+    .stButton > button {
+        width: 100% !important;
+        padding: 11px !important;
+        font-size: 14px !important;
+    }
 
     /* ── Misc ── */
     .report-box { padding: 10px 12px !important; font-size: 13px !important; }
-    .sidebar-logo { font-size: 18px !important; }
     .stDataFrame { overflow-x: auto !important; }
-    .js-plotly-plot { width: 100% !important; }
+    .js-plotly-plot { width: 100% !important; max-width: 100% !important; }
+    .block-container iframe { width: 100% !important; }
 }
 
 
