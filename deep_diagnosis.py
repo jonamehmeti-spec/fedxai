@@ -196,10 +196,10 @@ def build_deep_pdf(
     shadow_diagnosis: str,
     differentials: list,
     test_recs: list,
-    clinical_note: str,
-    shadow_alert: str,
+    clinical_note: str,   # kept in signature for backwards compat, not used in PDF
+    shadow_alert: str,    # kept in signature for backwards compat, not used in PDF
 ) -> bytes:
-    """Generate a clean clinical PDF — no statistics, no model weights."""
+    """Patient-facing clinical PDF — conditions and tests only, no statistics."""
     from reportlab.lib.pagesizes import A4
     from reportlab.lib import colors
     from reportlab.lib.units import mm
@@ -207,40 +207,39 @@ def build_deep_pdf(
         SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
     )
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.enums import TA_CENTER
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
         buf, pagesize=A4,
-        leftMargin=18*mm, rightMargin=18*mm,
-        topMargin=14*mm, bottomMargin=14*mm,
+        leftMargin=20*mm, rightMargin=20*mm,
+        topMargin=16*mm, bottomMargin=16*mm,
     )
 
     NAVY = colors.HexColor("#0A1628")
     BLUE = colors.HexColor("#3B6FD4")
-    TEAL = colors.HexColor("#0D9488")
     GREY = colors.HexColor("#64748B")
-    LGREY = colors.HexColor("#F8FAFD")
-    AMBER = colors.HexColor("#D97706")
+    LGREY = colors.HexColor("#F1F5F9")
 
     styles = getSampleStyleSheet()
     def sty(name, **kw):
         return ParagraphStyle(name, parent=styles["Normal"], **kw)
 
-    s_title  = sty("t",  fontSize=20, textColor=colors.white,  fontName="Helvetica-Bold", leading=24)
-    s_meta   = sty("m",  fontSize=9,  textColor=colors.HexColor("#C8D6E8"), fontName="Helvetica")
-    s_sect   = sty("s",  fontSize=8,  textColor=BLUE, fontName="Helvetica-Bold",
-                   spaceBefore=10, spaceAfter=4, letterSpacing=1.2)
-    s_body   = sty("b",  fontSize=9,  textColor=NAVY, leading=14, fontName="Helvetica", spaceAfter=3)
-    s_bold   = sty("bl", fontSize=9,  textColor=NAVY, leading=14, fontName="Helvetica-Bold", spaceAfter=3)
-    s_note   = sty("n",  fontSize=9,  textColor=NAVY, leading=15, fontName="Helvetica", spaceAfter=4)
-    s_alert  = sty("a",  fontSize=8.5, textColor=AMBER, fontName="Helvetica-Oblique", leading=13)
-    s_footer = sty("f",  fontSize=7,  textColor=GREY, alignment=TA_CENTER,
-                   fontName="Helvetica-Oblique", spaceBefore=6)
+    s_title  = sty("tt", fontSize=18, textColor=colors.white, fontName="Helvetica-Bold", leading=22)
+    s_date   = sty("dt", fontSize=9,  textColor=colors.HexColor("#C8D6E8"), fontName="Helvetica", leading=14)
+    s_sect   = sty("sc", fontSize=8,  textColor=BLUE, fontName="Helvetica-Bold",
+                   spaceBefore=12, spaceAfter=5, letterSpacing=1.4)
+    s_body   = sty("bd", fontSize=10, textColor=NAVY, fontName="Helvetica", leading=15, spaceAfter=4)
+    s_bold   = sty("bl", fontSize=10, textColor=NAVY, fontName="Helvetica-Bold", leading=15, spaceAfter=4)
+    s_item   = sty("it", fontSize=10, textColor=NAVY, fontName="Helvetica", leading=15,
+                   leftIndent=8, spaceAfter=3)
+    s_small  = sty("sm", fontSize=8.5, textColor=GREY, fontName="Helvetica", leading=13, spaceAfter=2)
+    s_footer = sty("ft", fontSize=7.5, textColor=GREY, fontName="Helvetica-Oblique",
+                   alignment=TA_CENTER, spaceBefore=4)
 
     def hr():
-        return HRFlowable(width="100%", thickness=0.5,
-                          color=colors.HexColor("#E2E8F0"), spaceAfter=6, spaceBefore=6)
+        return HRFlowable(width="100%", thickness=0.4,
+                          color=colors.HexColor("#E2E8F0"), spaceAfter=5, spaceBefore=5)
 
     def section(text):
         return Paragraph(text.upper(), s_sect)
@@ -249,32 +248,33 @@ def build_deep_pdf(
 
     # ── Header ───────────────────────────────────────────────────────
     hdr = Table([[
-        Paragraph("FedXAI", s_title),
-        Paragraph(f"Deep Diagnostic Report<br/>{datetime.now().strftime('%d %b %Y  %H:%M')}",
-                  sty("hm", fontSize=8, textColor=colors.HexColor("#C8D6E8"),
-                      fontName="Helvetica", alignment=2)),
-    ]], colWidths=["55%", "45%"])
+        Paragraph("FedXAI Deep Diagnostic Report", s_title),
+        Paragraph(datetime.now().strftime("%d %b %Y  %H:%M"), s_date),
+    ]], colWidths=["70%", "30%"])
     hdr.setStyle(TableStyle([
         ("BACKGROUND",    (0, 0), (-1, -1), NAVY),
         ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
-        ("TOPPADDING",    (0, 0), (-1, -1), 12),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
-        ("LEFTPADDING",   (0, 0), (0, -1),  14),
-        ("RIGHTPADDING",  (1, 0), (1, -1),  14),
+        ("TOPPADDING",    (0, 0), (-1, -1), 14),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
+        ("LEFTPADDING",   (0, 0), (0,  -1), 16),
+        ("RIGHTPADDING",  (1, 0), (1,  -1), 16),
+        ("ALIGN",         (1, 0), (1,  -1), "RIGHT"),
     ]))
     story.append(hdr)
-    story.append(Spacer(1, 5*mm))
-    story.append(hr())
+    story.append(Spacer(1, 6*mm))
 
     # ── Primary screening ─────────────────────────────────────────────
     story.append(section("Primary Screening Result"))
-    story.append(Paragraph(f"<b>Stage 1 finding:</b> {stage1_label}", s_body))
+    is_healthy = stage1_label.lower() == "healthy"
+    if not is_healthy:
+        story.append(Paragraph(f"<b>Prone to:</b> {stage1_label}", s_body))
     if shadow_diagnosis:
-        story.append(Paragraph(f"<b>Clinician's working diagnosis:</b> {shadow_diagnosis}", s_body))
+        story.append(Paragraph(
+            f"<b>Clinician's working diagnosis:</b> {shadow_diagnosis}", s_body))
     story.append(Spacer(1, 3*mm))
     story.append(hr())
 
-    # ── Differential diagnoses ────────────────────────────────────────
+    # ── Conditions to investigate ─────────────────────────────────────
     story.append(section("Conditions to Investigate"))
     story.append(Paragraph(
         "The following conditions share clinical features with the primary presentation "
@@ -282,8 +282,9 @@ def build_deep_pdf(
     story.append(Spacer(1, 2*mm))
     if differentials:
         for i, d in enumerate(differentials[:5], 1):
-            story.append(Paragraph(f"{i}.  <b>{d.display_name}</b>  ({d.category.capitalize()})", s_bold))
-    story.append(Spacer(1, 3*mm))
+            story.append(Paragraph(
+                f"{i}.  <b>{d.display_name}</b>  ({d.category.capitalize()})", s_item))
+    story.append(Spacer(1, 4*mm))
     story.append(hr())
 
     # ── Recommended tests ─────────────────────────────────────────────
@@ -291,43 +292,21 @@ def build_deep_pdf(
     if test_recs:
         top = test_recs[0]
         story.append(Paragraph(f"<b>Priority test:</b> {top.display_name}", s_bold))
-        story.append(Paragraph(top.reasoning, s_note))
         story.append(Paragraph(
             f"Normal range: {top.normal_range}  ·  Results in {top.result_time_days} day(s)",
-            sty("nr", fontSize=8, textColor=GREY, fontName="Helvetica", spaceAfter=6)))
+            s_small))
+        story.append(Spacer(1, 3*mm))
         if len(test_recs) > 1:
             story.append(Paragraph("<b>Additional tests to consider:</b>", s_bold))
+            story.append(Spacer(1, 1*mm))
             for rec in test_recs[1:]:
-                story.append(Paragraph(
-                    f"&bull;  <b>{rec.display_name}</b> — {rec.reasoning}",
-                    sty("tr", fontSize=8.5, textColor=NAVY, fontName="Helvetica",
-                        leading=13, leftIndent=10, spaceAfter=3)))
-    story.append(Spacer(1, 3*mm))
-    story.append(hr())
-
-    # ── Clinical note ─────────────────────────────────────────────────
-    story.append(section("Clinical Note"))
-    clean = re.sub(r"<[^>]+>", "", clinical_note).strip()
-    for para in clean.split("\n"):
-        para = para.strip()
-        if para:
-            story.append(Paragraph(para, s_note))
-    story.append(Spacer(1, 3*mm))
-
-    # ── Shadow mode alert ─────────────────────────────────────────────
-    if shadow_alert:
-        story.append(hr())
-        story.append(section("Shadow Mode"))
-        clean_alert = re.sub(r"<[^>]+>", "", shadow_alert).strip()
-        story.append(Paragraph(clean_alert, s_alert))
-        story.append(Spacer(1, 3*mm))
+                story.append(Paragraph(f"&bull;  {rec.display_name}", s_item))
+    story.append(Spacer(1, 6*mm))
 
     # ── Footer ────────────────────────────────────────────────────────
     story.append(hr())
     story.append(Paragraph(
-        "This report is a decision-support output from FedXAI and does not constitute a medical diagnosis. "
-        "All findings require clinical validation. Generated by FedXAI — "
-        "Federated &amp; Explainable AI for Chronic Disease Prediction.",
+        "Generated by FedXAI — Federated &amp; Explainable AI for Chronic Disease Prediction.",
         s_footer
     ))
 
