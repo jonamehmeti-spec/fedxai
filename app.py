@@ -105,6 +105,31 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Injected first — hides sidebar on mobile before anything else renders
+st.markdown("""
+<style>
+@media (max-width: 768px) {
+    [data-testid="stSidebar"],
+    section[data-testid="stSidebar"],
+    [data-testid="stSidebarCollapsedControl"],
+    div[data-testid="stSidebarCollapsedControl"],
+    button[data-testid="stSidebarCollapsedControl"] {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important; min-width: 0 !important; max-width: 0 !important;
+        height: 0 !important; overflow: hidden !important;
+        position: absolute !important; left: -9999px !important;
+        pointer-events: none !important;
+    }
+    [data-testid="stAppViewContainer"] > section:last-child,
+    .main, .main > div {
+        margin-left: 0 !important; padding-left: 0 !important;
+        width: 100vw !important; max-width: 100vw !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
 /* ── Base ─────────────────────────────────────────────────────── */
@@ -412,17 +437,32 @@ html, body, [class*="css"] {
 /* ── Mobile ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
 
-    /* ── Hide sidebar entirely — mobile nav selectbox handles navigation ── */
+    /* ── Hide sidebar — every selector Streamlit might use ── */
     [data-testid="stSidebar"],
-    [data-testid="stSidebarCollapsedControl"] {
+    section[data-testid="stSidebar"],
+    [data-testid="stSidebarCollapsedControl"],
+    div[data-testid="stSidebarCollapsedControl"],
+    button[data-testid="stSidebarCollapsedControl"] {
         display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        max-width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        position: absolute !important;
+        left: -9999px !important;
+        pointer-events: none !important;
     }
 
-    /* ── Stretch main content to full viewport width ── */
-    [data-testid="stAppViewContainer"] > section:last-child {
+    /* ── Reclaim full width now sidebar is gone ── */
+    [data-testid="stAppViewContainer"] > section:last-child,
+    .main, .main > div {
         margin-left: 0 !important;
+        padding-left: 0 !important;
         width: 100vw !important;
         max-width: 100vw !important;
+        left: 0 !important;
     }
     .block-container {
         padding-top: 0.75rem !important;
