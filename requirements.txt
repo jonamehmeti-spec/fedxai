@@ -13,3 +13,4 @@ python-dotenv>=1.0.0
 joblib>=1.4.0
 plotly>=5.21.0
 imbalanced-learn>=0.12.0
+reportlab>=4.0.0
