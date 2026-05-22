@@ -314,6 +314,212 @@ def build_deep_pdf(
     return buf.getvalue()
 
 
+def build_full_clinical_pdf(
+    stage1_label: str,
+    stage1_confidence: float,
+    shadow_diagnosis: str,
+    mimic_alerts: list,
+    differentials: list,
+    test_recs: list,
+    clinical_note: str,
+    shadow_alert: str,
+) -> bytes:
+    """Full clinician-facing PDF with all pipeline stages, statistics, and reasoning."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.units import mm
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+    )
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4,
+        leftMargin=20*mm, rightMargin=20*mm,
+        topMargin=16*mm, bottomMargin=16*mm,
+    )
+
+    NAVY  = colors.HexColor("#0A1628")
+    BLUE  = colors.HexColor("#3B6FD4")
+    TEAL  = colors.HexColor("#0D9488")
+    GREY  = colors.HexColor("#64748B")
+    LGREY = colors.HexColor("#F1F5F9")
+    AMBER = colors.HexColor("#D97706")
+    RED   = colors.HexColor("#EF4444")
+
+    CATEGORY_PDF_COLORS = {
+        "endocrine": colors.HexColor("#F59E0B"),
+        "autoimmune": colors.HexColor("#8B5CF6"),
+        "cardiovascular": colors.HexColor("#EF4444"),
+        "sleep": colors.HexColor("#3B82F6"),
+        "metabolic": colors.HexColor("#10B981"),
+        "hematological": colors.HexColor("#EC4899"),
+    }
+
+    styles = getSampleStyleSheet()
+    def sty(name, **kw):
+        return ParagraphStyle(name, parent=styles["Normal"], **kw)
+
+    s_title  = sty("tt", fontSize=16, textColor=colors.white, fontName="Helvetica-Bold", leading=20)
+    s_date   = sty("dt", fontSize=8,  textColor=colors.HexColor("#C8D6E8"), fontName="Helvetica", leading=13)
+    s_badge  = sty("bg", fontSize=7,  textColor=colors.HexColor("#90AACB"), fontName="Helvetica", leading=12)
+    s_sect   = sty("sc", fontSize=8,  textColor=BLUE, fontName="Helvetica-Bold",
+                   spaceBefore=12, spaceAfter=5, letterSpacing=1.4)
+    s_body   = sty("bd", fontSize=9,  textColor=NAVY, fontName="Helvetica", leading=14, spaceAfter=3)
+    s_bold   = sty("bl", fontSize=9,  textColor=NAVY, fontName="Helvetica-Bold", leading=14, spaceAfter=3)
+    s_item   = sty("it", fontSize=9,  textColor=NAVY, fontName="Helvetica", leading=14,
+                   leftIndent=8, spaceAfter=3)
+    s_small  = sty("sm", fontSize=8,  textColor=GREY, fontName="Helvetica", leading=12, spaceAfter=2)
+    s_note   = sty("nt", fontSize=9,  textColor=NAVY, fontName="Helvetica", leading=14, spaceAfter=3)
+    s_alert  = sty("al", fontSize=8.5, textColor=AMBER, fontName="Helvetica-Oblique", leading=13)
+    s_footer = sty("ft", fontSize=7,  textColor=GREY, fontName="Helvetica-Oblique",
+                   alignment=TA_CENTER, spaceBefore=4)
+
+    def hr():
+        return HRFlowable(width="100%", thickness=0.4,
+                          color=colors.HexColor("#E2E8F0"), spaceAfter=5, spaceBefore=5)
+
+    def section(text):
+        return Paragraph(text.upper(), s_sect)
+
+    story = []
+
+    # ── Header ────────────────────────────────────────────────────────
+    hdr = Table([[
+        Paragraph("FedXAI — Full Clinical Report", s_title),
+        Paragraph(f"{datetime.now().strftime('%d %b %Y  %H:%M')}<br/>Clinician Copy", s_date),
+    ]], colWidths=["65%", "35%"])
+    hdr.setStyle(TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, -1), NAVY),
+        ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING",    (0, 0), (-1, -1), 14),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
+        ("LEFTPADDING",   (0, 0), (0,  -1), 16),
+        ("RIGHTPADDING",  (1, 0), (1,  -1), 16),
+        ("ALIGN",         (1, 0), (1,  -1), "RIGHT"),
+    ]))
+    story.append(hdr)
+    story.append(Spacer(1, 5*mm))
+
+    # ── Stage 1 result ────────────────────────────────────────────────
+    story.append(section("Stage 1 — Primary Screening"))
+    story.append(Paragraph(
+        f"<b>Prediction:</b> {stage1_label}  ({stage1_confidence*100:.0f}% model confidence)", s_body))
+    if shadow_diagnosis:
+        story.append(Paragraph(
+            f"<b>Clinician's working diagnosis:</b> {shadow_diagnosis}", s_body))
+    story.append(Spacer(1, 3*mm))
+    story.append(hr())
+
+    # ── Stage 2: Mimic alerts ─────────────────────────────────────────
+    if mimic_alerts:
+        story.append(section("Stage 2 — Hidden Mimic Alerts"))
+        mimic_rows = [["Condition", "Category", "Overlap", "Avg Delay"]]
+        for a in mimic_alerts[:5]:
+            mimic_rows.append([
+                a.display_name,
+                a.category.capitalize(),
+                f"{a.confidence:.0%}",
+                f"{a.avg_diagnostic_delay_months} mo",
+            ])
+        mt = Table(mimic_rows, colWidths=["42%", "20%", "16%", "22%"])
+        mt.setStyle(TableStyle([
+            ("FONTNAME",      (0, 0), (-1,  0), "Helvetica-Bold"),
+            ("FONTSIZE",      (0, 0), (-1, -1), 8),
+            ("TEXTCOLOR",     (0, 0), (-1,  0), colors.white),
+            ("BACKGROUND",    (0, 0), (-1,  0), NAVY),
+            ("ROWBACKGROUNDS",(0, 1), (-1, -1), [LGREY, colors.white]),
+            ("ALIGN",         (2, 0), (3, -1),  "CENTER"),
+            ("TOPPADDING",    (0, 0), (-1, -1),  3),
+            ("BOTTOMPADDING", (0, 0), (-1, -1),  3),
+            ("LEFTPADDING",   (0, 0), (0,  -1),  6),
+            ("GRID",          (0, 0), (-1, -1),  0.3, colors.HexColor("#E2E8F0")),
+        ]))
+        story.append(mt)
+        story.append(Spacer(1, 3*mm))
+        story.append(hr())
+
+    # ── Stage 3: Differentials ────────────────────────────────────────
+    if differentials:
+        story.append(section("Stage 3 — Differential Diagnosis Ranking"))
+        diff_rows = [["Diagnosis", "Category", "Probability", "Uncertainty"]]
+        for d in differentials[:6]:
+            diff_rows.append([
+                d.display_name,
+                d.category.capitalize(),
+                f"{d.posterior_probability:.1%}",
+                d.uncertainty.capitalize(),
+            ])
+        dt = Table(diff_rows, colWidths=["42%", "20%", "18%", "20%"])
+        dt.setStyle(TableStyle([
+            ("FONTNAME",      (0, 0), (-1,  0), "Helvetica-Bold"),
+            ("FONTSIZE",      (0, 0), (-1, -1), 8),
+            ("TEXTCOLOR",     (0, 0), (-1,  0), colors.white),
+            ("BACKGROUND",    (0, 0), (-1,  0), NAVY),
+            ("ROWBACKGROUNDS",(0, 1), (-1, -1), [LGREY, colors.white]),
+            ("ALIGN",         (2, 0), (3, -1),  "CENTER"),
+            ("TOPPADDING",    (0, 0), (-1, -1),  3),
+            ("BOTTOMPADDING", (0, 0), (-1, -1),  3),
+            ("LEFTPADDING",   (0, 0), (0,  -1),  6),
+            ("GRID",          (0, 0), (-1, -1),  0.3, colors.HexColor("#E2E8F0")),
+        ]))
+        story.append(dt)
+        story.append(Spacer(1, 3*mm))
+        story.append(hr())
+
+    # ── Stage 4: Tests ────────────────────────────────────────────────
+    story.append(section("Stage 4 — Next-Best-Test Recommendations"))
+    if test_recs:
+        top = test_recs[0]
+        story.append(Paragraph(f"<b>Priority test:</b> {top.display_name}", s_bold))
+        story.append(Paragraph(top.reasoning, s_note))
+        story.append(Paragraph(
+            f"Sensitivity {top.sensitivity:.0%}  ·  Specificity {top.specificity:.0%}  ·  "
+            f"VoI {top.voi_score:.3f}  ·  Normal range: {top.normal_range}  ·  "
+            f"Results in {top.result_time_days} day(s)",
+            s_small))
+        if len(test_recs) > 1:
+            story.append(Spacer(1, 2*mm))
+            story.append(Paragraph("<b>Additional tests:</b>", s_bold))
+            for rec in test_recs[1:]:
+                story.append(Paragraph(
+                    f"&bull; <b>{rec.display_name}</b> — {rec.reasoning}  "
+                    f"(Sens {rec.sensitivity:.0%}, Spec {rec.specificity:.0%}, VoI {rec.voi_score:.3f})",
+                    sty("tr", fontSize=8, textColor=NAVY, fontName="Helvetica",
+                        leading=13, leftIndent=10, spaceAfter=3)))
+    story.append(Spacer(1, 3*mm))
+    story.append(hr())
+
+    # ── Stage 5: Clinical note ────────────────────────────────────────
+    story.append(section("Stage 5 — AI Clinical Note"))
+    clean = re.sub(r"<[^>]+>", "", clinical_note).strip()
+    for para in clean.split("\n"):
+        para = para.strip()
+        if para:
+            story.append(Paragraph(para, s_note))
+    story.append(Spacer(1, 3*mm))
+
+    # ── Shadow mode ───────────────────────────────────────────────────
+    if shadow_alert:
+        story.append(hr())
+        story.append(section("Shadow Mode"))
+        story.append(Paragraph(re.sub(r"<[^>]+>", "", shadow_alert).strip(), s_alert))
+        story.append(Spacer(1, 3*mm))
+
+    # ── Footer ────────────────────────────────────────────────────────
+    story.append(hr())
+    story.append(Paragraph(
+        "Decision-support tool only — not a substitute for clinical judgment. "
+        "Generated by FedXAI — Federated &amp; Explainable AI for Chronic Disease Prediction.",
+        s_footer
+    ))
+
+    doc.build(story)
+    return buf.getvalue()
+
+
 def render_deep_diagnosis(
     stage1_proba: Dict[str, float],
     patient_values: Dict,
@@ -599,6 +805,8 @@ def render_deep_diagnosis(
                 st.session_state["deep_shadow_alert"] = ""
             st.session_state["deep_differentials"] = differentials
             st.session_state["deep_test_recs"] = test_recs
+            st.session_state["deep_mimic_alerts"] = mimic_alerts
+            st.session_state["deep_stage1_confidence"] = stage1_confidence
 
         # Display stored note if available
         if st.session_state.get("deep_clinical_note"):
@@ -613,26 +821,120 @@ def render_deep_diagnosis(
 
             st.caption("This system is a decision-support tool. All findings require clinical validation.")
 
-            # ── Download clinical report PDF ───────────────────────
+            # ── Download reports ───────────────────────────────────
             st.markdown("<br>", unsafe_allow_html=True)
-            try:
-                pdf_bytes = build_deep_pdf(
-                    stage1_label=stage1_label,
-                    shadow_diagnosis=st.session_state.get("deep_shadow_diagnosis", ""),
-                    differentials=st.session_state.get("deep_differentials", differentials),
-                    test_recs=st.session_state.get("deep_test_recs", test_recs),
-                    clinical_note=summary,
-                    shadow_alert=shadow_alert,
-                )
-                st.download_button(
-                    label="Download Clinical Report (PDF)",
-                    data=pdf_bytes,
-                    file_name="fedxai_clinical_report.pdf",
-                    mime="application/pdf",
-                    use_container_width=False,
-                )
-            except Exception as _e:
-                st.warning(f"PDF unavailable: {_e}")
+            st.markdown("""
+            <style>
+            .report-download-wrap {
+                display: flex;
+                gap: 14px;
+                margin-top: 4px;
+            }
+            .report-card {
+                flex: 1;
+                border-radius: 12px;
+                padding: 18px 20px 14px 20px;
+            }
+            .report-card-patient {
+                background: #F8FAFD;
+                border: 1.5px solid #CBD5E1;
+            }
+            .report-card-clinician {
+                background: #0A1628;
+                border: 1.5px solid #1E3A5F;
+            }
+            .report-card-label {
+                font-size: 10px;
+                font-weight: 800;
+                letter-spacing: 0.10em;
+                text-transform: uppercase;
+                margin-bottom: 4px;
+            }
+            .report-card-label-patient  { color: #3B6FD4; }
+            .report-card-label-clinician { color: #90AACB; }
+            .report-card-title {
+                font-size: 15px;
+                font-weight: 700;
+                margin-bottom: 4px;
+            }
+            .report-card-title-patient  { color: #0A1628; }
+            .report-card-title-clinician { color: #ffffff; }
+            .report-card-desc {
+                font-size: 12px;
+                line-height: 1.5;
+                margin-bottom: 12px;
+            }
+            .report-card-desc-patient  { color: #64748B; }
+            .report-card-desc-clinician { color: #90AACB; }
+            </style>
+            <div class="report-download-wrap">
+                <div class="report-card report-card-patient">
+                    <div class="report-card-label report-card-label-patient">For the patient</div>
+                    <div class="report-card-title report-card-title-patient">Patient Summary</div>
+                    <div class="report-card-desc report-card-desc-patient">
+                        Conditions to investigate and recommended tests.<br>
+                        No statistics or clinical jargon.
+                    </div>
+                </div>
+                <div class="report-card report-card-clinician">
+                    <div class="report-card-label report-card-label-clinician">For the clinician</div>
+                    <div class="report-card-title report-card-title-clinician">Full Clinical Report</div>
+                    <div class="report-card-desc report-card-desc-clinician">
+                        All pipeline stages: mimics, differentials,<br>
+                        VoI tests, AI clinical note &amp; shadow mode.
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            _saved_diff  = st.session_state.get("deep_differentials", differentials)
+            _saved_tests = st.session_state.get("deep_test_recs", test_recs)
+            _saved_shadow_diag = st.session_state.get("deep_shadow_diagnosis", "")
+            _saved_mimics = st.session_state.get("deep_mimic_alerts", mimic_alerts)
+            _saved_conf   = st.session_state.get("deep_stage1_confidence", stage1_confidence)
+
+            dl_col1, dl_col2 = st.columns(2)
+            with dl_col1:
+                try:
+                    patient_pdf = build_deep_pdf(
+                        stage1_label=stage1_label,
+                        shadow_diagnosis=_saved_shadow_diag,
+                        differentials=_saved_diff,
+                        test_recs=_saved_tests,
+                        clinical_note=summary,
+                        shadow_alert=shadow_alert,
+                    )
+                    st.download_button(
+                        label="Download Patient Report",
+                        data=patient_pdf,
+                        file_name="fedxai_patient_report.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                    )
+                except Exception as _e:
+                    st.warning(f"PDF unavailable: {_e}")
+            with dl_col2:
+                try:
+                    full_pdf = build_full_clinical_pdf(
+                        stage1_label=stage1_label,
+                        stage1_confidence=_saved_conf,
+                        shadow_diagnosis=_saved_shadow_diag,
+                        mimic_alerts=_saved_mimics,
+                        differentials=_saved_diff,
+                        test_recs=_saved_tests,
+                        clinical_note=summary,
+                        shadow_alert=shadow_alert,
+                    )
+                    st.download_button(
+                        label="Download Full Report",
+                        data=full_pdf,
+                        file_name="fedxai_full_clinical_report.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                        type="primary",
+                    )
+                except Exception as _e:
+                    st.warning(f"PDF unavailable: {_e}")
 
     # Diagnostic delay context
     if mimic_alerts:
