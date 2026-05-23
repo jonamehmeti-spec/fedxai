@@ -1,4 +1,5 @@
 .env
+.streamlit/secrets.toml
 data/raw_data.csv
 logs/xai_outputs/
 __pycache__/
